@@ -1,8 +1,8 @@
 package com.gri.service;
 
 import com.gri.Main;
-import com.gri.data.DataServiceImpl;
 import com.gri.model.Attribute;
+import com.gri.model.Result;
 import com.gri.utils.Constants;
 import com.gri.utils.Utils;
 import org.slf4j.Logger;
@@ -73,7 +73,7 @@ public class CalculationService {
         }
 
         if (good) {
-            DataServiceImpl.putResult(Main.workbook, attributes, bonuses);
+            Main.resultList.add(new Result(attributes, bonuses));
             Main.goodIndex++;
             logger.info("good {}: {}", Main.goodIndex, Arrays.stream(result).boxed().map(d -> Integer.toString(d.intValue())).collect(Collectors.joining("; ")));
 //            logger.info("good: {}", Arrays.stream(attributes).map(Attribute::toString).collect(Collectors.joining("; ")));

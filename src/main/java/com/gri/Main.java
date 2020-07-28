@@ -1,11 +1,15 @@
 package com.gri;
 
-import com.gri.data.DataServiceImpl;
+import com.gri.data.repository.GetDataRepository;
+import com.gri.data.repository.SaveDataRepository;
+import com.gri.data.repository.impl.GetDataXssfRepositoryImpl;
+import com.gri.data.repository.impl.SaveDataXssfRepositoryImpl;
 import com.gri.model.Attribute;
 import com.gri.model.Bonus;
 import com.gri.model.Character;
 import com.gri.model.Place;
 import com.gri.model.Regime;
+import com.gri.model.Result;
 import com.gri.service.CalculationService;
 import com.gri.service.StartFilterService;
 import com.gri.utils.Constants;
@@ -16,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +47,8 @@ public class Main {
     public static int goodIndex = 0;
     public static int goodMax = 500;
 
+    public static  List<Result> resultList = new ArrayList<>();
+
     public static void main(String[] args) throws IOException {
         String fileName ;
         Regime regime;
@@ -54,16 +61,16 @@ public class Main {
             fileName = args[0];
             regime = Regime.valueOf(args[1]);
         }
-        Main.workbook = DataServiceImpl.getWorkbook(fileName);
+        GetDataRepository getDataRepository = new GetDataXssfRepositoryImpl(fileName);
 
-        Character character = DataServiceImpl.getCharacter(workbook);
-        Place[] places = DataServiceImpl.getPlaces(workbook);
-        double[] base = DataServiceImpl.getBase(workbook);
-        Main.leagueAndZal = DataServiceImpl.getLeagueAndZal(workbook, base);
-        double[] target = DataServiceImpl.getTarget(workbook);
-        Main.effectiveTarget = DataServiceImpl.getEffectiveTarget(workbook);
-        double[] glyphs = DataServiceImpl.getGlyphs(workbook);
-        Map<String, Bonus> bonuses = DataServiceImpl.getBonuses(workbook, base);
+        Character character = getDataRepository.getCharacter();
+        Place[] places = getDataRepository.getPlaces();
+        double[] base = getDataRepository.getBase();
+        Main.leagueAndZal = getDataRepository.getLeagueAndZal(base);
+        double[] target = getDataRepository.getTarget();
+        Main.effectiveTarget = getDataRepository.getEffectiveTarget();
+        double[] glyphs = getDataRepository.getGlyphs();
+        Map<String, Bonus> bonuses = getDataRepository.getBonuses( base);
 
         Main.possibleBonusesForSkips = Utils.getPossibleBonusesForSkips(bonuses);
 
@@ -71,7 +78,8 @@ public class Main {
             Main.checkEffectiveTarget = Main.checkEffectiveTarget || Main.effectiveTarget[i] > 0;
         }
 
-        List<Attribute> allAttributes = DataServiceImpl.getAllAttributes(workbook, base, bonuses, places, glyphs);
+        List<Attribute> allAttributes = getDataRepository.getAllAttributes(base, bonuses, places, glyphs);
+        getDataRepository.close();
 
         Main.baseAndLeagueAndZal = Utils.getSum(base, leagueAndZal);
         targetDeltaReal = Utils.getDelta(target, baseAndLeagueAndZal);
@@ -87,7 +95,10 @@ public class Main {
 
                 CalculationService.startCalculation(0, attributes, targetDelta, new Attribute[0]);
                 if (goodIndex > 0) {
-                    DataServiceImpl.saveFile(workbook, defPath + "_" + character.name + defType);
+                    String outFileName  = defPath + "_" + character.name + defType;
+                    SaveDataRepository saveDataRepository = new SaveDataXssfRepositoryImpl(fileName, outFileName);
+                    saveDataRepository.saveMainResults(resultList);
+                    saveDataRepository.close();
                 }
                 break;
             }
@@ -98,8 +109,8 @@ public class Main {
             case FIND_DOUBLES:{
                 StartFilterService.setParentId(allAttributes);
 
-                DataServiceImpl.setParentId(workbook, allAttributes);
-                DataServiceImpl.saveFile(workbook, defPath + defType);
+//                XssfDataServiceImpl.setParentId(workbook, allAttributes);
+//                XssfDataServiceImpl.saveFile(workbook, defPath + defType);
                 break;
             }
         }

@@ -4,11 +4,24 @@ import com.gri.Main;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 public class XssfUtils {
     private static Logger logger = LoggerFactory.getLogger(XssfUtils.class);
+
+    public static XSSFWorkbook getWorkbook(String file) throws IOException {
+        logger.info("Reading file {}", file);
+        InputStream ExcelFileToRead = new FileInputStream(file);
+        XSSFWorkbook workbook = new XSSFWorkbook(ExcelFileToRead);
+        workbook.setForceFormulaRecalculation(true);
+        return workbook;
+    }
 
     public static String[] getStringArray(XSSFSheet sheet, int rowNum, int colStart, int cnt) {
         XSSFRow row = sheet.getRow(rowNum);

@@ -1,8 +1,6 @@
 package com.gri.service;
 
 import com.gri.model.Attribute;
-import com.gri.model.Character;
-import com.gri.model.Place;
 import com.gri.model.Result;
 
 import java.util.List;
@@ -17,4 +15,4 @@ public interface CalculationService {
 
     Attribute[][] filterByCortege(double[] targetDelta, Attribute[][] attribute, Attribute[] cortege);
 
-    }
+}

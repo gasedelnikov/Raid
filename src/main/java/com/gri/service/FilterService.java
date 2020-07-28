@@ -13,14 +13,17 @@ import java.util.stream.Collectors;
 
 public interface FilterService {
 
-    Attribute[][] startFilter(Place[] places,
-                              List<Attribute> allAttributes,
-                              Character character,
-                              double[] targetDelta);
+    Attribute[][] convertListToArray(Place[] places,
+                                     List<Attribute> allAttributes,
+                                     Character character,
+                                     double[] targetDelta);
 
     Attribute[][] getCharacterAttributes(double[] targetDelta,
                                          List<Attribute> allAttributes,
                                          Place[] places,
                                          Character character) ;
 
+    void setAttributeFilterId(Attribute[][] attributes);
+
+    Attribute[][] filterAttributesByValues(Attribute[][] attributes);
 }

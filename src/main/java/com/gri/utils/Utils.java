@@ -1,6 +1,5 @@
 package com.gri.utils;
 
-import com.gri.Main;
 import com.gri.model.Bonus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

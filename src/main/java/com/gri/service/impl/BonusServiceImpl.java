@@ -44,6 +44,7 @@ public class BonusServiceImpl implements BonusService {
                 }
             }
         }
+
         for (Map.Entry<Bonus, Integer> entry : bonusMap.entrySet()) {
             int quantum = (int) (entry.getValue() * entry.getKey().quantum);
             if (quantum >= 1) {

@@ -45,7 +45,7 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
         workbook.close();
     }
 
-    public void setParentId(List<Attribute> allAttributes) {
+    public void saveAttributeParentId(List<Attribute> allAttributes) throws IOException{
         XSSFSheet sheet = workbook.getSheet(Constants.Sheets.ART);
         int cnt = sheet.getLastRowNum();
 
@@ -83,6 +83,8 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
                 xlsCellParent.setCellValue(0);
             }
         }
+
+        saveFile();
     }
 
     private void saveFile() throws IOException {

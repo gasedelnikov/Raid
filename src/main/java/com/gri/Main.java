@@ -28,7 +28,7 @@ import java.util.Map;
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static int CALC_ATR_COUNT = 40;
+    public static int CALC_ATR_COUNT = 0;
     public static double ATTRIBUTE_FILTER_VALUE = 0;
 
     public static int CALC_DELTA = 0;
@@ -81,7 +81,9 @@ public class Main {
 
         switch (regime) {
             case FIND_MAIN: {
-                Attribute[][] attributes = filterService.startFilter(places, allAttributes, character, targetDelta);
+                Attribute[][] attributes = filterService.convertListToArray(places, allAttributes, character, targetDelta);
+                attributes = filterService.filterAttributesByValues(attributes);
+
                 double[] tmpTargetDelta = Utils.getDelta(targetDelta, bonusService.getAttributeBonuses());
                 attributes = calculationService.filterAttributesRecursive(attributes, tmpTargetDelta);
 
@@ -94,14 +96,14 @@ public class Main {
                 }
                 break;
             }
-            case TEST_CHARACTER: {
+            case CHECK_CHARACTER: {
                 Attribute[][] attributes = filterService.getCharacterAttributes(targetDelta, allAttributes, places, character);
                 double[] tmpTargetDelta = Utils.getDelta(targetDelta, bonusService.getAttributeBonuses());
 
                 attributes = calculationService.filterAttributesRecursive(attributes, tmpTargetDelta);
                 boolean check1 = true;
-                for (int i=0; i < attributes.length; i++){
-                    check1 = check1 && attributes[i].length > 0;
+                for (Attribute[] attribute : attributes) {
+                    check1 = check1 && attribute.length > 0;
                 }
                 logger.info("test character; filterAttributesRecursive: {} ", check1);
 
@@ -110,10 +112,13 @@ public class Main {
                 break;
             }
             case FIND_DOUBLES: {
-//                FilterService.setParentId(allAttributes);
+                Attribute[][] attributes = filterService.convertListToArray(places, allAttributes, character, targetDelta);
+                filterService.setAttributeFilterId(attributes);
+                String outFileName = defPath + "_" + character.name + defType;
+                SaveDataRepository saveDataRepository = new SaveDataXssfRepositoryImpl(fileName, outFileName);
+                saveDataRepository.saveAttributeParentId(allAttributes);
+                saveDataRepository.close();
 
-//                XssfDataServiceImpl.setParentId(workbook, allAttributes);
-//                XssfDataServiceImpl.saveFile(workbook, defPath + defType);
                 break;
             }
         }

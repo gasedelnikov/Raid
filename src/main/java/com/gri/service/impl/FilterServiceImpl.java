@@ -21,15 +21,15 @@ public class FilterServiceImpl implements FilterService {
     private static final Logger logger = LoggerFactory.getLogger(FilterServiceImpl.class);
 
     @Override
-    public Attribute[][] startFilter(Place[] places,
-                                     List<Attribute> allAttributes,
-                                     Character character,
-                                     double[] targetDelta) {
+    public Attribute[][] convertListToArray(Place[] places,
+                                            List<Attribute> allAttributes,
+                                            Character character,
+                                            double[] targetDelta) {
         Map<String, List<Attribute>> mapOfAttributes = Arrays.stream(places)
                 .collect(Collectors.toMap(place -> place.name,
                         place -> getAttributeList(allAttributes, place.name, character, place.checkFraction)));
 
-        Attribute[][] attributes = Arrays.stream(places)
+        return Arrays.stream(places)
                 .map(place -> place.name)
                 .peek(s -> logger.info("Загружено {} : {}", s, mapOfAttributes.get(s).size()))
                 .map(s -> mapOfAttributes.get(s).stream()
@@ -40,8 +40,6 @@ public class FilterServiceImpl implements FilterService {
                 )
                 .collect(Collectors.toList())
                 .toArray(new Attribute[0][0]);
-
-        return filterAttributesByValues(attributes);
     }
 
     @Override
@@ -59,31 +57,11 @@ public class FilterServiceImpl implements FilterService {
                 .collect(Collectors.toList()).toArray(new Attribute[0][0]);
     }
 
-    private Attribute[][] filterAttributesByValues(Attribute[][] attributes) {
-        List<Attribute> filteredList = new ArrayList<>();
-
+    public Attribute[][] filterAttributesByValues(Attribute[][] attributes) {
         Attribute[][] attributesTmp = Arrays.stream(attributes)
-                .map(attribs -> Arrays.stream(attribs)
-                                .filter(attribute1 -> {
-                                            boolean filter = Arrays.stream(attribs).noneMatch(attribute1::filter);
-//                                            double filterId = Arrays.stream(attribs)
-//                                                    .filter(attribute1::filter)
-//                                                    .map(attribute -> attribute.id)
-//                                                    .findAny().orElse(-1d);
-//                                            Attribute filterIdd = Arrays.stream(attribs)
-//                                                    .filter(attribute1::filter)
-//                                                    .findAny().orElse(null);
-//                                    if (filterId > 0 && filter) {
-//                                        filteredList.add(attribute1);
-//                                    }
-                                            if (!filter) { // !filter
-//                                                attribute1.parentId = filterId;
-                                                filteredList.add(attribute1);
-                                            }
-                                            return filter;
-                                        }
-                                )
-                                .collect(Collectors.toList()).toArray(new Attribute[0])
+                .map(tmpAttributes -> Arrays.stream(tmpAttributes)
+                        .filter(attribute1 -> Arrays.stream(tmpAttributes).noneMatch(attribute1::filter))
+                        .collect(Collectors.toList()).toArray(new Attribute[0])
                 )
                 .collect(Collectors.toList())
                 .toArray(new Attribute[0][0]);
@@ -97,6 +75,24 @@ public class FilterServiceImpl implements FilterService {
         logger.info("filter allCnt = {}; Counts: {}", cnt, String.join(", ", stats));
 
         return attributesTmp;
+    }
+
+    public void setAttributeFilterId(Attribute[][] attributes) {
+        Arrays.stream(attributes)
+                .forEach(tmpAttributes -> Arrays.stream(tmpAttributes)
+                                .forEach(attribute1 -> {
+                                            double filterId = Arrays.stream(tmpAttributes)
+                                                    .filter(attribute1::filter)
+                                                    .map(attribute -> attribute.id)
+                                                    .findAny().orElse(-1d);
+
+                                            if (filterId > 0) {
+                                                attribute1.parentId = filterId;
+                                            }
+                                        }
+                                )
+                )
+        ;
     }
 
     private List<Attribute> getAttributeList(List<Attribute> allAttributes, String place, Character character, boolean checkFraction) {

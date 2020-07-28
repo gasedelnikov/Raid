@@ -8,6 +8,7 @@ import com.gri.model.Character;
 import com.gri.model.Place;
 import com.gri.utils.Constants;
 import com.gri.utils.XssfUtils;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -60,8 +61,8 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
 
         List<Place> placeList = new ArrayList<>();
         for (int i = 0; i < Constants.PLACES_COUNT; i++) {
-            double[] t1 = XssfUtils.getAttribColorFilter(sheet, Constants.PLACES_ROW + 2, Constants.PLACES_COLL_START + i, 3, 3, 0);
-            double[] t2 = XssfUtils.getAttribColorFilter(sheet, Constants.PLACES_ROW + 5, Constants.PLACES_COLL_START + i, 3, 8, 1);
+            double[] t1 = getAttributeColorFilter(sheet, Constants.PLACES_ROW + 2, Constants.PLACES_COLL_START + i, 3, 3, 0);
+            double[] t2 = getAttributeColorFilter(sheet, Constants.PLACES_ROW + 5, Constants.PLACES_COLL_START + i, 3, 8, 1);
 
             placeList.add(new Place(names[i], i > 5, (int) orderByArray[i], t1, t2));
         }
@@ -149,7 +150,7 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
         XSSFSheet sheet = workbook.getSheet(Constants.Sheets.ART);
         int cnt = sheet.getLastRowNum();
 
-        Map<String, Place> placeMap = Arrays.asList(places).stream().collect(Collectors.toMap(place -> place.name, Function.identity()));
+        Map<String, Place> placeMap = Arrays.stream(places).collect(Collectors.toMap(place -> place.name, Function.identity()));
 //        List<String> placesNameList = Arrays.asList(places).stream().map(place -> place.name).limit(6).collect(Collectors.toList());
 
         for (int i = Constants.ATR_START_ROW; i <= cnt; i++) {
@@ -176,11 +177,13 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
                 for (int j = 0; j < pl.filterPr.length; j++) {
                     if (valuesPr[j] >= pl.filterPr[j]) {
                         filter = true;
+                        break;
                     }
                 }
                 for (int j = 0; j < pl.filterMain.length; j++) {
                     if (values[j] >= pl.filterMain[j]) {
                         filter = true;
+                        break;
                     }
                 }
             }
@@ -195,6 +198,7 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
                     glyphsIndex = XssfUtils.getDoubleValueSafe(row.getCell(Constants.Columns.GLYPHS));
                     addGlyphs(glyphsIndex, mainPrIndex, valuesPr, mainIndex, values, glyphs);
                 } catch (IllegalStateException ex) {
+                    logger.warn("IllegalStateException: getAllAttributes");
                 }
 
                 values[Constants.Indexes.ZD] = values[Constants.Indexes.ZD] + base[Constants.Indexes.ZD] * valuesPr[0] / 100;
@@ -235,6 +239,39 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
         double result = 0;
         if (glyphsIndex < glyphsMax) {
             result = glyph * (glyphsMax - glyphsIndex) / glyphsMax;
+        }
+        return result;
+    }
+
+    private double[] getAttributeColorFilter(XSSFSheet sheet, int rowStart, int colNum, int cnt, int arraySize, int key) {
+        double[] result = new double[arraySize];
+
+        XSSFRow row0 = sheet.getRow(Constants.PLACES_ROW + 1);
+        XSSFCell cell0 = row0.getCell(colNum);
+        boolean getAll = false;
+        if (cell0 != null && cell0.getCellStyle() != null && cell0.getCellStyle().getFillForegroundColorColor() != null) {
+            String color = cell0.getCellStyle().getFillForegroundColorColor().getARGBHex();
+            getAll = Constants.Filter.COLOR_FILTER_COLOR.equals(color);
+        }
+        if (!getAll) {
+            for (int i = 0; i < arraySize; i++) {
+                result[i] = Double.MAX_VALUE;
+            }
+
+            for (int i = 0; i < cnt; i++) {
+                XSSFRow row = sheet.getRow(rowStart + i);
+                if (key == XssfUtils.getDoubleValueSafe(row.getCell(Constants.Filter.COLOR_FILTER_KEY))) {
+                    int index = (int) XssfUtils.getDoubleValueSafe(row.getCell(Constants.Filter.COLOR_FILTER_INDEX));
+
+                    XSSFCell cell = row.getCell(colNum);
+                    if (cell != null && cell.getCellStyle() != null && cell.getCellStyle().getFillForegroundColorColor() != null) {
+                        String color = cell.getCellStyle().getFillForegroundColorColor().getARGBHex();
+                        if (Constants.Filter.COLOR_FILTER_COLOR.equals(color)) {
+                            result[index] = XssfUtils.getDoubleValueSafe(cell);
+                        }
+                    }
+                }
+            }
         }
         return result;
     }

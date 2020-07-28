@@ -27,14 +27,13 @@ public class CalculationServiceImpl implements CalculationService {
     private final double[] baseAndLeagueAndZal;
     private final double[] effectiveTarget;
 
-
     public CalculationServiceImpl(BonusService bonusService, double[] baseAndLeagueAndZal, double[] effectiveTarget) {
         this.bonusService = bonusService;
         this.baseAndLeagueAndZal = baseAndLeagueAndZal;
         this.effectiveTarget = effectiveTarget;
 
-        for (int i = 0; i < effectiveTarget.length; i++) {
-            checkEffectiveTarget = checkEffectiveTarget || effectiveTarget[i] > 0;
+        for (double v : effectiveTarget) {
+            checkEffectiveTarget = checkEffectiveTarget || v > 0;
         }
     }
 
@@ -66,7 +65,7 @@ public class CalculationServiceImpl implements CalculationService {
 //                    logger.info("{} : {}; index = {}/{}; time = {}s; goodCnt = {}", index, 100 * i / attribute[index].length, i, attribute[index].length, (System.currentTimeMillis() - t0) / 1000, resultList.size());
 //                }
                 if (index == 0) {
-                    logger.info("progress = {}%; index = {}/{}; time = {}s; goodCnt = {}", 100 * i / attribute[0].length, i, attribute[0].length, (System.currentTimeMillis() - t0) / 1000,resultList.size());
+                    logger.info("progress = {}%; index = {}/{}; time = {}s; goodCnt = {}", 100 * i / attribute[0].length, i, attribute[0].length, (System.currentTimeMillis() - t0) / 1000, resultList.size());
                 }
             }
             if (index == 0) {
@@ -115,29 +114,25 @@ public class CalculationServiceImpl implements CalculationService {
         }
         int startCnt = endCnt + 1;
         while (endCnt > 0 && endCnt < startCnt) {
-            Attribute[][] tt = new Attribute[Constants.PLACES_COUNT][];
+            Attribute[][] tmpAttributes = new Attribute[Constants.PLACES_COUNT][];
             startCnt = endCnt;
             endCnt = 0;
             int[][] placesMax = getPlacesMax(attributes, targetDelta);
 
             for (int i = 0; i < Constants.PLACES_COUNT; i++) {  // по местам
-                tt[i] = new Attribute[attributes[i].length];
+                tmpAttributes[i] = new Attribute[attributes[i].length];
                 int cnt = 0;
                 for (int j = 0; j < attributes[i].length; j++) { // по атрибутам
                     if (attributes[i][j].filter(placesMax[i])) {
-                        tt[i][cnt] = attributes[i][j];
+                        tmpAttributes[i][cnt] = attributes[i][j];
                         cnt++;
                     }
                 }
                 endCnt += cnt;
-                tt[i] = Arrays.copyOf(tt[i], cnt);
+                tmpAttributes[i] = Arrays.copyOf(tmpAttributes[i], cnt);
             }
-            attributes = tt;
-//            xx++;
+            attributes = tmpAttributes;
         }
-//        if (endCnt >0 && xx == 1){
-//            logger.info("1 ");
-//        }
         return attributes;
     }
 
@@ -161,9 +156,7 @@ public class CalculationServiceImpl implements CalculationService {
             for (int j = 0; j < Constants.PLACES_COUNT; j++) {  // по местам
                 double max = 0;
                 for (int k = 0; k < attributes[j].length; k++) { // по атрибутам
-//                    max = Math.max(max, attributes[j][k].values[i]);
-                    double v = attributes[j][k].values[i];
-                    max = (v >= max) ? v : max;
+                    max = Math.max(attributes[j][k].values[i], max);
                 }
                 placesMax[j][i] = (int) max;
                 valuesMax[i] += max;
@@ -180,7 +173,7 @@ public class CalculationServiceImpl implements CalculationService {
         if (good) {
             if (checkValue > 0) {
                 double value = baseAndLeagueAndZal[v_index] + result[v_index];
-                double krit  = baseAndLeagueAndZal[Constants.Indexes.KRIT_V] + result[Constants.Indexes.KRIT_V];
+                double krit = baseAndLeagueAndZal[Constants.Indexes.KRIT_V] + result[Constants.Indexes.KRIT_V];
                 return value * (1 + krit / 100) >= checkValue;
             } else {
                 return true;
@@ -205,8 +198,6 @@ public class CalculationServiceImpl implements CalculationService {
             return false;
         }
     }
-
-
 
 
 }

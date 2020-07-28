@@ -45,6 +45,16 @@ public class Constants {
         public static final int COLL_INDEX_FILTER = 0;
     }
 
+    public static class Filter {
+        public static final String GRIN = "FF00B050";
+        public static final String RED = "FFFF0000";
+
+        public static final String COLOR_FILTER_COLOR = GRIN;
+
+        public static final int COLOR_FILTER_KEY = 32;
+        public static final int COLOR_FILTER_INDEX = 33;
+    }
+
     public static class Indexes {
         public static final int SIZE = 9;
 

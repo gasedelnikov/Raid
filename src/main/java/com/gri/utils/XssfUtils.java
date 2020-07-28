@@ -46,7 +46,7 @@ public class XssfUtils {
             result = cell == null ? "" : cell.getStringCellValue().trim();
         } catch (IllegalStateException ex) {
             try {
-                result = Double.toString(cell.getNumericCellValue()) ;
+                result = Double.toString(cell.getNumericCellValue());
             } catch (IllegalStateException ex2) {
                 result = "";
             }
@@ -60,7 +60,6 @@ public class XssfUtils {
             result = (cell == null) ? 0 : cell.getNumericCellValue();
         } catch (IllegalStateException ex) {
 //            logger.info("Empty cell = {}", cell.getStringCellValue());
-//            throw new IllegalStateException("Empty cell");
         }
         return result;
     }
@@ -79,36 +78,4 @@ public class XssfUtils {
         return result;
     }
 
-    public static double[] getAttribColorFilter(XSSFSheet sheet, int rowStart, int colNum, int cnt, int arraySize, int key) {
-        double[] result = new double[arraySize];
-
-        XSSFRow row0 = sheet.getRow(Constants.PLACES_ROW +1);
-        XSSFCell cell0 = row0.getCell(colNum);
-        boolean getAll = false;
-        if (cell0 != null && cell0.getCellStyle() != null && cell0.getCellStyle().getFillForegroundColorColor() != null) {
-            String color = cell0.getCellStyle().getFillForegroundColorColor().getARGBHex();
-            getAll = "FF00B050".equals(color); // зеленый
-        }
-        if (!getAll) {
-            for (int i = 0; i < arraySize; i++) {
-                result[i] = Double.MAX_VALUE;
-            }
-
-            for (int i = 0; i < cnt; i++) {
-                XSSFRow row = sheet.getRow(rowStart + i);
-                if (key == getDoubleValueSafe(row.getCell(32))) {
-                    int index = (int) getDoubleValueSafe(row.getCell(33));
-
-                    XSSFCell cell = row.getCell(colNum);
-                    if (cell != null && cell.getCellStyle() != null && cell.getCellStyle().getFillForegroundColorColor() != null) {
-                        String color = cell.getCellStyle().getFillForegroundColorColor().getARGBHex();
-                        if ("FF00B050".equals(color)){  // зеленый  //      "FFFF0000"  // красный
-                            result[index] = getDoubleValueSafe(cell);
-                        }
-                    }
-                }
-            }
-        }
-        return result;
-    }
 }

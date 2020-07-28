@@ -14,5 +14,7 @@ public interface SaveDataRepository {
 
     void saveMainResults(List<Result> resultList) throws IOException;
 
+    void saveAttributeParentId(List<Attribute> allAttributes) throws IOException;
+
     void close() throws IOException;
 }

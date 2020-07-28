@@ -1,4 +1,4 @@
-package com.gri.data.repository;
+package com.gri.repository;
 
 import com.gri.model.Attribute;
 import com.gri.model.Bonus;

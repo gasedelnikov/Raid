@@ -60,21 +60,6 @@ public class UtilsStreams {
                 .orElse(null);
     }
 
-    public static List<Attribute> getAttributeList(List<Attribute> allAttributes, String place, Character character, boolean checkFraction) {
-        List<Attribute> result = allAttributes.stream()
-                .filter(attribute -> place.equals(attribute.placeName))
-                .filter(attribute -> attribute.filterFlag <= Main.ATTRIBUTE_FILTER_VALUE || character.name.equals(attribute.characterName))
-                .filter(attribute -> !checkFraction || character.fraction.equals(attribute.type))
-//                .filter(attribute -> character.name.equals(attribute.characterName) || attribute.id == -1)
-//                .filter(attribute -> attribute.characterName == null || attribute.characterName.equals(""))
-                .limit((Main.CALC_ATR_COUNT > 0) ? Main.CALC_ATR_COUNT : Integer.MAX_VALUE)
-                .collect(Collectors.toList());
-        if (result.size() == 0){
-            result = Collections.singletonList(new Attribute(place));
-        }
-        return result;
-    }
-
     public static int getSumCount(Map<String, List<Attribute>> attributes) {
         return attributes.entrySet().stream()
                 .map(entry -> entry.getValue().size())

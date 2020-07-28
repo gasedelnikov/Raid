@@ -1,6 +1,5 @@
 package com.gri.utils;
 
-import com.gri.Main;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -16,7 +15,7 @@ public class XssfUtils {
     private static Logger logger = LoggerFactory.getLogger(XssfUtils.class);
 
     public static XSSFWorkbook getWorkbook(String file) throws IOException {
-        logger.info("Reading file {}", file);
+        logger.info("get Workbook from file {}", file);
         InputStream ExcelFileToRead = new FileInputStream(file);
         XSSFWorkbook workbook = new XSSFWorkbook(ExcelFileToRead);
         workbook.setForceFormulaRecalculation(true);
@@ -110,11 +109,6 @@ public class XssfUtils {
                 }
             }
         }
-//        else{
-//            for (int i = 0; i < arraySize; i++) {
-//                result[i] = true;
-//            }
-//        }
         return result;
     }
 }

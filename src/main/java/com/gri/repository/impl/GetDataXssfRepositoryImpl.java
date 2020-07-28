@@ -1,7 +1,7 @@
-package com.gri.data.repository.impl;
+package com.gri.repository.impl;
 
 import com.gri.Main;
-import com.gri.data.repository.GetDataRepository;
+import com.gri.repository.GetDataRepository;
 import com.gri.model.Attribute;
 import com.gri.model.Bonus;
 import com.gri.model.Character;

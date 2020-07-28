@@ -1,6 +1,6 @@
-package com.gri.data.repository.impl;
+package com.gri.repository.impl;
 
-import com.gri.data.repository.SaveDataRepository;
+import com.gri.repository.SaveDataRepository;
 import com.gri.model.Attribute;
 import com.gri.model.Result;
 import com.gri.utils.Constants;
@@ -86,6 +86,7 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
     }
 
     private void saveFile() throws IOException {
+        logger.info("save result to File {}", outFileName);
         FileOutputStream fos = new FileOutputStream(outFileName);
         workbook.write(fos);
         fos.close();

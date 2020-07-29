@@ -15,15 +15,14 @@ public interface FilterService {
 
     Attribute[][] convertListToArray(Place[] places,
                                      List<Attribute> allAttributes,
-                                     Character character,
-                                     double[] targetDelta);
+                                     Character character);
 
     Attribute[][] getCharacterAttributes(double[] targetDelta,
                                          List<Attribute> allAttributes,
                                          Place[] places,
                                          Character character) ;
 
-    void setAttributeFilterId(Attribute[][] attributes);
+    void setAttributeParentId(Attribute[][] attributes);
 
     Attribute[][] filterAttributesByValues(Attribute[][] attributes);
 }

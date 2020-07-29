@@ -73,7 +73,7 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
 
             if (filterId > 0) {
                 xlsCellId.setCellStyle(yellowStyle);
-                xlsCellParent.setCellValue(filterId);
+                xlsCellParent.setCellValue((int) filterId + "_c");
             }
 
             double parentId = allAttributes.stream()
@@ -83,7 +83,7 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
 
             if (parentId > 0) {
                 xlsCellId.setCellStyle(greenStyle);
-                xlsCellParent.setCellValue(0);
+                xlsCellParent.setCellValue((int) id + "_p");
             }
         }
 

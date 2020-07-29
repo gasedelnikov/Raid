@@ -20,20 +20,24 @@ import java.util.stream.Collectors;
 public class FilterServiceImpl implements FilterService {
     private static final Logger logger = LoggerFactory.getLogger(FilterServiceImpl.class);
 
+    private final String EMPTY_CHARACTER_FIELDS_VALUE = "<<NONE>>";
+
     @Override
     public Attribute[][] convertListToArray(Place[] places,
                                             List<Attribute> allAttributes,
-                                            Character character,
-                                            double[] targetDelta) {
+                                            Character character) {
+        final Character newCharacter = (character == null) ? new Character(EMPTY_CHARACTER_FIELDS_VALUE, EMPTY_CHARACTER_FIELDS_VALUE, EMPTY_CHARACTER_FIELDS_VALUE) : character;
+        final boolean checkFraction = character != null;
+
         Map<String, List<Attribute>> mapOfAttributes = Arrays.stream(places)
                 .collect(Collectors.toMap(place -> place.name,
-                        place -> getAttributeList(allAttributes, place.name, character, place.checkFraction)));
+                        place -> getAttributeList(allAttributes, place.name, newCharacter, checkFraction && place.checkFraction)));
 
         return Arrays.stream(places)
                 .map(place -> place.name)
                 .peek(s -> logger.info("Загружено {} : {}", s, mapOfAttributes.get(s).size()))
                 .map(s -> mapOfAttributes.get(s).stream()
-                                .sorted(Comparator.comparingInt(o -> (character.name.equals(o.characterName) ? -1 : 1)))
+                                .sorted(Comparator.comparingInt(o -> (newCharacter.name.equals(o.characterName) ? -1 : 1)))
 //                        .sorted((o1, o2) -> (character.name.equals(o1.characterName) ? -1 : 1) - (character.name.equals(o2.characterName) ? -1 : 1))
                                 .collect(Collectors.toList())
                                 .toArray(new Attribute[0])
@@ -77,22 +81,23 @@ public class FilterServiceImpl implements FilterService {
         return attributesTmp;
     }
 
-    public void setAttributeFilterId(Attribute[][] attributes) {
+    public void setAttributeParentId(Attribute[][] attributes) {
         Arrays.stream(attributes)
                 .forEach(tmpAttributes -> Arrays.stream(tmpAttributes)
-                                .forEach(attribute1 -> {
-                                            double filterId = Arrays.stream(tmpAttributes)
-                                                    .filter(attribute1::filter)
-                                                    .map(attribute -> attribute.id)
-                                                    .findAny().orElse(-1d);
+                        .filter(attribute -> "".equals(attribute.characterName) && "0.0".equals(attribute.tmpCharacterName))
+                        .forEach(attribute1 -> {
+                                    double filterId = Arrays.stream(tmpAttributes)
+                                            .filter(attribute -> "".equals(attribute.characterName) && "0.0".equals(attribute.tmpCharacterName))
+                                            .filter(attribute1::filter)
+                                            .map(attribute -> attribute.id)
+                                            .findAny().orElse(-1d);
 
-                                            if (filterId > 0) {
-                                                attribute1.parentId = filterId;
-                                            }
-                                        }
-                                )
-                )
-        ;
+                                    if (filterId > 0) {
+                                        attribute1.parentId = filterId;
+                                    }
+                                }
+                        )
+                );
     }
 
     private List<Attribute> getAttributeList(List<Attribute> allAttributes, String place, Character character, boolean checkFraction) {
@@ -110,23 +115,5 @@ public class FilterServiceImpl implements FilterService {
         return result;
     }
 
-
-//    public static void setParentId(List<Attribute> attributes) {
-//        List<Attribute> filteredList = attributes.stream()
-//                .filter(attribute -> attribute.characterName.equals(""))
-//                .filter(attribute -> attribute.tmpCharacterName.equals("0.0"))
-//                .collect(Collectors.toList());
-//
-//        filteredList.forEach(attribute1 -> {
-//                    double filterId = filteredList.stream()
-//                            .filter(attribute1::filter)
-//                            .map(attribute -> attribute.id)
-//                            .findAny().orElse(-1d);
-//                    if (filterId > 0) {
-//                        attribute1.parentId = filterId;
-//                    }
-//                }
-//        );
-//    }
 
 }

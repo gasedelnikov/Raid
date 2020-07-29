@@ -24,21 +24,22 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static int CALC_ATR_COUNT = 30;
+    public static final int CALC_ATR_COUNT = 0;
     public static double ATTRIBUTE_FILTER_VALUE = 0;
 
-    public static int CALC_DELTA = 0;
-    public static double CALC_DELTA_MULTIPLIER = 1;
+    public static final int CALC_DELTA = 0;
+    public static final double CALC_DELTA_MULTIPLIER = 1;
 
-    private static String defPath = "C:\\Users\\grse1118\\Desktop\\Raid200729";
-    private static String defType = ".xlsx";
-    private static Regime defRegime = Regime.FIND_MAIN;
+    private static final String defPath = "C:\\Users\\grse1118\\Desktop\\Raid200729";
+    private static final String defType = ".xlsx";
+    private static final Regime defRegime = Regime.FIND_DOUBLES;
 
-    public static int RESULTS_LIMIT_CNT = 500;
+    public static final int RESULTS_LIMIT_CNT = 500;
 
     public static void main(String[] args) throws IOException {
         String fileName;
@@ -55,7 +56,21 @@ public class Main {
 
         Character character = getDataRepository.getCharacter();
         Place[] places = getDataRepository.getPlaces();
-        double[] base = getDataRepository.getBase();
+        double[] base = new double[Constants.VAL_COUNT];
+        if (regime == Regime.FIND_DOUBLES ){
+            base[Constants.Indexes.KRIT_S] = 10;
+            base[Constants.Indexes.KRIT_V] = 50;
+            base[Constants.Indexes.ZD] = 12000;
+            base[Constants.Indexes.ATK] = 630;
+            base[Constants.Indexes.DEF] = 730;
+            base[Constants.Indexes.SKOR] = 85;
+            base[Constants.Indexes.METK] = 0;
+            base[Constants.Indexes.SOP] = 30;
+        }
+        else{
+            base = getDataRepository.getBase();
+        }
+
         double[] leagueAndZal = getDataRepository.getLeagueAndZal(base);
         double[] target = getDataRepository.getTarget();
         double[] effectiveTarget = getDataRepository.getEffectiveTarget();
@@ -81,7 +96,7 @@ public class Main {
 
         switch (regime) {
             case FIND_MAIN: {
-                Attribute[][] attributes = filterService.convertListToArray(places, allAttributes, character, targetDelta);
+                Attribute[][] attributes = filterService.convertListToArray(places, allAttributes, character);
                 attributes = filterService.filterAttributesByValues(attributes);
 
                 double[] tmpTargetDelta = Utils.getDelta(targetDelta, bonusService.getAttributeBonuses());
@@ -112,10 +127,12 @@ public class Main {
                 break;
             }
             case FIND_DOUBLES: {
-                Attribute[][] attributes = filterService.convertListToArray(places, allAttributes, character, targetDelta);
-                filterService.setAttributeFilterId(attributes);
-                String outFileName = defPath + "_" + character.name + defType;
-                SaveDataRepository saveDataRepository = new SaveDataXssfRepositoryImpl(fileName, outFileName);
+                logger.info("start find doubles");
+                Attribute[][] attributes = filterService.convertListToArray(places, allAttributes, null);
+
+                filterService.setAttributeParentId(attributes);
+//                String outFileName = defPath + "_" + character.name + defType;
+                SaveDataRepository saveDataRepository = new SaveDataXssfRepositoryImpl(fileName, fileName);
                 saveDataRepository.saveAttributeParentId(allAttributes);
                 saveDataRepository.close();
 

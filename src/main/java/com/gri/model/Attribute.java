@@ -17,7 +17,7 @@ public class Attribute {
     public double rank;
     public String type;
     public Bonus bonus;
-    public double bonusType = 0;
+    public double bonusType;
     public double filterFlag;
     public Place place;
     public double parentId;
@@ -65,7 +65,7 @@ public class Attribute {
         boolean result = true;
         while (i < values.length && result) {
 //            result = values[i] >= Math.floor(filterValues[i]);
-            result = values[i] >= (int)filterValues[i];
+            result = values[i] >= (int) filterValues[i];
 //            result = values[i] >= filterValues[i];
             i++;
         }
@@ -76,7 +76,10 @@ public class Attribute {
         int i = 0;
         boolean greatOrEquals = true;
         boolean equals = true;
-        if (this.id != attribute.id && this.bonusType == attribute.bonusType && this.placeName.equals(attribute.placeName)) {
+        if (this.id != attribute.id &&
+                this.bonusType == attribute.bonusType &&
+                this.placeName.equals(attribute.placeName) &&
+                (!this.place.checkFraction || this.type.equals(attribute.type))) {
             while (i < this.values.length && greatOrEquals) {
                 greatOrEquals = attribute.values[i] >= this.values[i];
                 equals = equals && attribute.values[i] == this.values[i];

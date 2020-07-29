@@ -92,9 +92,9 @@ public class CalculationServiceImpl implements CalculationService {
             v++;
         }
         if (good && checkEffectiveTarget) {
-            good = checkKritEffectiveValue(good, result, Constants.Indexes.ZD, effectiveTarget[0]);
-            good = checkKritEffectiveValue(good, result, Constants.Indexes.ATK, effectiveTarget[1]);
-            good = checkKritEffectiveValue(good, result, Constants.Indexes.DEF, effectiveTarget[2]);
+            good = checkCriticalEffectiveValue(good, result, Constants.Indexes.ZD, effectiveTarget[0]);
+            good = checkCriticalEffectiveValue(good, result, Constants.Indexes.ATK, effectiveTarget[1]);
+            good = checkCriticalEffectiveValue(good, result, Constants.Indexes.DEF, effectiveTarget[2]);
             good = checkEffectiveZdValue(good, result, effectiveTarget[3]);
         }
 
@@ -169,12 +169,12 @@ public class CalculationServiceImpl implements CalculationService {
         return placesMax;
     }
 
-    private boolean checkKritEffectiveValue(boolean good, double[] result, int v_index, double checkValue) {
+    private boolean checkCriticalEffectiveValue(boolean good, double[] result, int v_index, double checkValue) {
         if (good) {
             if (checkValue > 0) {
-                double value = baseAndLeagueAndZal[v_index] + result[v_index];
-                double krit = baseAndLeagueAndZal[Constants.Indexes.KRIT_V] + result[Constants.Indexes.KRIT_V];
-                return value * (1 + krit / 100) >= checkValue;
+//                double value = baseAndLeagueAndZal[v_index] + result[v_index];
+//                double krit = baseAndLeagueAndZal[Constants.Indexes.KRIT_V] + result[Constants.Indexes.KRIT_V];
+                return getCriticalEffectiveValue(v_index, result, baseAndLeagueAndZal) >= checkValue;
             } else {
                 return true;
             }
@@ -187,10 +187,9 @@ public class CalculationServiceImpl implements CalculationService {
     private boolean checkEffectiveZdValue(boolean good, double[] result, double checkValue) {
         if (good) {
             if (checkValue > 0) {
-                double zd = baseAndLeagueAndZal[Constants.Indexes.ZD] + result[Constants.Indexes.ZD];
-                double def = baseAndLeagueAndZal[Constants.Indexes.DEF] + result[Constants.Indexes.DEF];
-
-                return zd * (1 + def / 600) >= checkValue;
+//                double zd = baseAndLeagueAndZal[Constants.Indexes.ZD] + result[Constants.Indexes.ZD];
+//                double def = baseAndLeagueAndZal[Constants.Indexes.DEF] + result[Constants.Indexes.DEF];
+                return getEffectiveZdValue(result, baseAndLeagueAndZal) >= checkValue;
             } else {
                 return true;
             }
@@ -199,5 +198,18 @@ public class CalculationServiceImpl implements CalculationService {
         }
     }
 
+    private double getCriticalEffectiveValue(int v_index, double[] result, double[] baseAndLeagueAndZal) {
+        double value = baseAndLeagueAndZal[v_index] + result[v_index];
+        double criticalValue = baseAndLeagueAndZal[Constants.Indexes.KRIT_V] + result[Constants.Indexes.KRIT_V];
+
+        return Utils.getCriticalEffectiveValue(value , criticalValue);
+    }
+
+    private double getEffectiveZdValue(double[] result, double[] baseAndLeagueAndZal) {
+        double zd = baseAndLeagueAndZal[Constants.Indexes.ZD] + result[Constants.Indexes.ZD];
+        double def = baseAndLeagueAndZal[Constants.Indexes.DEF] + result[Constants.Indexes.DEF];
+
+        return Utils.getEffectiveZdValue(zd, def);
+    }
 
 }

@@ -68,4 +68,12 @@ public class Utils {
                 );
     }
 
+    public static double getCriticalEffectiveValue(double value, double criticalValue) {
+        return value * (1 + criticalValue / 100);
+    }
+
+    public static double getEffectiveZdValue(double zd, double def) {
+        return zd * (1 + def / 600) ;
+    }
+
 }

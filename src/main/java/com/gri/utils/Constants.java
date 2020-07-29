@@ -101,9 +101,14 @@ public class Constants {
     }
 
     public static class Result {
-        public static final int START_ROW = 1;
-        public static final int START_CELL = 0;
+        public static final int ALL_START_ROW = 1;
+        public static final int ALL_START_CELL = 0;
+        public static final int ALL_CNT_ROW = 10;
+        public static final String ALL_BONUS_TEXT = "Бонусы";
 
-        public static final int CNT_ROW = 10;
+        public static final int SUMMARY_START_ROW = 10;
+        public static final int SUMMARY_START_CELL = 0;
+        public static final int SUMMARY_VAL_COLL_START = 12;
+        public static final int  SUMMARY_EFFECTIVE_VAL_COLL_START = 21;
     }
 }

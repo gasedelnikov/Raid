@@ -28,13 +28,13 @@ import java.util.Map;
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static int CALC_ATR_COUNT = 0;
+    public static int CALC_ATR_COUNT = 30;
     public static double ATTRIBUTE_FILTER_VALUE = 0;
 
     public static int CALC_DELTA = 0;
     public static double CALC_DELTA_MULTIPLIER = 1;
 
-    private static String defPath = "C:\\Users\\grse1118\\Desktop\\Raid200712";
+    private static String defPath = "C:\\Users\\grse1118\\Desktop\\Raid200729";
     private static String defType = ".xlsx";
     private static Regime defRegime = Regime.FIND_MAIN;
 
@@ -91,7 +91,7 @@ public class Main {
                 if (resultList.size() > 0) {
                     String outFileName = defPath + "_" + character.name + defType;
                     SaveDataRepository saveDataRepository = new SaveDataXssfRepositoryImpl(fileName, outFileName);
-                    saveDataRepository.saveMainResults(resultList);
+                    saveDataRepository.saveMainResults(resultList, character, baseAndLeagueAndZal);
                     saveDataRepository.close();
                 }
                 break;

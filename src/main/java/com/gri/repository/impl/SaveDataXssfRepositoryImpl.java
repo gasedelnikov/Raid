@@ -1,9 +1,11 @@
 package com.gri.repository.impl;
 
+import com.gri.model.Character;
 import com.gri.repository.SaveDataRepository;
 import com.gri.model.Attribute;
 import com.gri.model.Result;
 import com.gri.utils.Constants;
+import com.gri.utils.Utils;
 import com.gri.utils.XssfUtils;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -24,7 +26,7 @@ import java.util.List;
 public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
     private Logger logger = LoggerFactory.getLogger(SaveDataXssfRepositoryImpl.class);
 
-        private String outFileName;
+    private String outFileName;
     private XSSFWorkbook workbook;
 
     public SaveDataXssfRepositoryImpl(String infileName, String outFileName) throws IOException {
@@ -33,19 +35,20 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
     }
 
     @Override
-    public void saveMainResults(List<Result> resultList) throws IOException{
-        for (int i=0; i < resultList.size(); i++){
+    public void saveMainResults(List<Result> resultList, Character character, double[] baseAndLeagueAndZal) throws IOException {
+        for (int i = 0; i < resultList.size(); i++) {
             putResult(i, resultList.get(i).getAttributes(), resultList.get(i).getBonuses());
         }
+        putSummaryResult(resultList, character, baseAndLeagueAndZal);
         saveFile();
     }
 
     @Override
-    public void close() throws IOException{
+    public void close() throws IOException {
         workbook.close();
     }
 
-    public void saveAttributeParentId(List<Attribute> allAttributes) throws IOException{
+    public void saveAttributeParentId(List<Attribute> allAttributes) throws IOException {
         XSSFSheet sheet = workbook.getSheet(Constants.Sheets.ART);
         int cnt = sheet.getLastRowNum();
 
@@ -95,9 +98,80 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
         workbook.close();
     }
 
+    private void putSummaryResult(List<Result> resultList, Character character, double[] baseAndLeagueAndZal) {
+        int sRow = Constants.Result.SUMMARY_START_ROW - 1;
+        int sCell = Constants.Result.SUMMARY_START_CELL;
+
+        XSSFSheet sheet = workbook.getSheet(Constants.Sheets.FIND);
+
+        for (int i = 0; i < resultList.size(); i++) {
+            Attribute[] attributes = Arrays.stream(resultList.get(i).getAttributes())
+                    .sorted(Comparator.comparing(attribute -> attribute.placeName))
+                    .toArray(Attribute[]::new);
+
+            int row = sRow + i;
+            setDoubleValueInXLS(sheet, row, sCell, i);
+
+            int characterCnt = 0;
+            for (int j = 0; j < Constants.PLACES_COUNT; j++) {
+                String attributeInfo = attributes[j].characterName;
+                if (character.name.equals(attributeInfo)) {
+                    characterCnt++;
+                }
+
+                if (!attributes[j].place.checkFraction) {
+                    if ("".equals(attributeInfo)) {
+                        attributeInfo = attributes[j].type;
+                    } else {
+                        attributeInfo += "\\" + attributes[j].type;
+                    }
+                }
+                setStringValueInXLS(sheet, row, sCell + j + 2, attributeInfo);
+            }
+            setDoubleValueInXLS(sheet, row, Constants.Result.SUMMARY_VAL_COLL_START - 1, characterCnt);
+
+            double zd = 0;
+            double atk = 0;
+            double def = 0;
+            double criticalValue = 0;
+            for (int j = 0; j < Constants.VAL_COUNT; j++) {
+                double value = resultList.get(i).getBonuses()[j] + baseAndLeagueAndZal[j];
+                for (Attribute attribute : attributes) {
+                    value += attribute.values[j];
+                }
+                switch (j) {
+                    case Constants.Indexes.ZD: {
+                        zd = value;
+                        break;
+                    }
+                    case Constants.Indexes.ATK: {
+                        atk = value;
+                        break;
+                    }
+                    case Constants.Indexes.DEF: {
+                        def = value;
+                        break;
+                    }
+                    case Constants.Indexes.KRIT_V: {
+                        criticalValue = value;
+                        break;
+                    }
+                }
+
+                setDoubleValueInXLS(sheet, row, j + Constants.Result.SUMMARY_VAL_COLL_START, value);
+            }
+            int index = Constants.Result.SUMMARY_EFFECTIVE_VAL_COLL_START;
+            setDoubleValueInXLS(sheet, row, index, Utils.getCriticalEffectiveValue(zd, criticalValue));
+            setDoubleValueInXLS(sheet, row, ++index, Utils.getCriticalEffectiveValue(atk, criticalValue));
+            setDoubleValueInXLS(sheet, row, ++index, Utils.getCriticalEffectiveValue(def, criticalValue));
+            setDoubleValueInXLS(sheet, row, ++index, Utils.getEffectiveZdValue(zd, def));
+
+        }
+    }
+
     private void putResult(int resultIndex, Attribute[] attributes, double[] bonuses) {
-        int sRow = Constants.Result.START_ROW + Constants.Result.CNT_ROW * resultIndex;
-        int sCell = Constants.Result.START_CELL;
+        int sRow = Constants.Result.ALL_START_ROW + Constants.Result.ALL_CNT_ROW * resultIndex;
+        int sCell = Constants.Result.ALL_START_CELL;
 
         XSSFSheet sheet = workbook.getSheet(Constants.Sheets.RESULT);
         attributes = Arrays.stream(attributes)
@@ -105,8 +179,8 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
                 .toArray(Attribute[]::new);
 
         setDoubleValueInXLS(sheet, sRow, sCell, resultIndex);
-        setStringValueInXLS(sheet, sRow, sCell + 1, resultIndex + "Бонусы");
-        setStringValueInXLS(sheet, sRow, Constants.Columns.CHARACTER_NAME + 1, "Бонусы");
+        setStringValueInXLS(sheet, sRow, sCell + 1, resultIndex + Constants.Result.ALL_BONUS_TEXT);
+        setStringValueInXLS(sheet, sRow, Constants.Columns.CHARACTER_NAME + 1, Constants.Result.ALL_BONUS_TEXT);
         for (int j = 0; j < Constants.VAL_COUNT; j++) {
             setDoubleValueInXLS(sheet, sRow, Constants.VAL_COLL_START + 1 + j, (int) bonuses[j]);
         }

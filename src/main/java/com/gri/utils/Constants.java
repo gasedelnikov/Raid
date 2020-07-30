@@ -1,11 +1,6 @@
 package com.gri.utils;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class Constants {
-//    public static int CALC_ATR_COUNT = 15;
-
     public static final int ATR_START_ROW = 8;
     public static final int ATR_VALUES_COUNT = 9;
     public static final int ATR_VALUES_MAIN_COUNT = 8;

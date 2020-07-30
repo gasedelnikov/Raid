@@ -1,9 +1,6 @@
 package com.gri.service.impl;
 
-import com.gri.Main;
 import com.gri.model.Attribute;
-import com.gri.model.Character;
-import com.gri.model.Place;
 import com.gri.model.Result;
 import com.gri.service.BonusService;
 import com.gri.service.CalculationService;

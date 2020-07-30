@@ -11,7 +11,7 @@ import java.util.Map;
 
 public interface GetDataRepository {
 
-    Character getCharacter();
+    Character getCharacter(Double attributeFilterValue);
 
     Place[] getPlaces();
 

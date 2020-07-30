@@ -1,6 +1,5 @@
 package com.gri.repository.impl;
 
-import com.gri.Main;
 import com.gri.repository.GetDataRepository;
 import com.gri.model.Attribute;
 import com.gri.model.Bonus;
@@ -40,16 +39,19 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
     }
 
     @Override
-    public Character getCharacter() {
+    public Character getCharacter(Double attributeFilterValue) {
         XSSFSheet sheet = workbook.getSheet(Constants.Sheets.FIND);
         XSSFRow xx = sheet.getRow(Constants.Character.ROW_INDEX_NAME);
         String name = XssfUtils.getStringValueSafe(sheet.getRow(Constants.Character.ROW_INDEX_NAME).getCell(Constants.Character.COLL_INDEX_NAME));
         String element = XssfUtils.getStringValueSafe(sheet.getRow(Constants.Character.ROW_INDEX_ELEMENT).getCell(Constants.Character.COLL_INDEX_ELEMENT));
         String fraction = XssfUtils.getStringValueSafe(sheet.getRow(Constants.Character.ROW_INDEX_FRACTION).getCell(Constants.Character.COLL_INDEX_FRACTION));
-        Main.ATTRIBUTE_FILTER_VALUE = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Character.ROW_INDEX_FILTER).getCell(Constants.Character.COLL_INDEX_FILTER));
 
-        logger.info("loaded Character; name = {}, fraction = {}, element = {}, filter value = {}", name, fraction, element, Main.ATTRIBUTE_FILTER_VALUE);
-        return (new Character(name, fraction, element));
+        if (attributeFilterValue == null) {
+            attributeFilterValue = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Character.ROW_INDEX_FILTER).getCell(Constants.Character.COLL_INDEX_FILTER));
+        }
+
+        logger.info("loaded Character; name = {}, fraction = {}, element = {}, filter value = {}", name, fraction, element, attributeFilterValue);
+        return (new Character(name, fraction, element, attributeFilterValue));
     }
 
     @Override

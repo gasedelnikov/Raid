@@ -29,35 +29,36 @@ import java.util.stream.Collectors;
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static final int CALC_ATR_COUNT = 0;
-    public static double ATTRIBUTE_FILTER_VALUE = 0;
-
-    public static final int CALC_DELTA = 0;
-    public static final double CALC_DELTA_MULTIPLIER = 1;
+    private static final int calcAtrLimitCount = 0;
+    private static final int calcDelta = 0;
+    private static final double calcDeltaMultiplier = 1;
 
     private static final String defPath = "C:\\Users\\grse1118\\Desktop\\Raid200729";
     private static final String defType = ".xlsx";
     private static final Regime defRegime = Regime.FIND_DOUBLES;
-
-    public static final int RESULTS_LIMIT_CNT = 500;
+    private static final Double defAttributeFilterValue = null;
+    private static final int defResultsLimitCnt = 500;
 
     public static void main(String[] args) throws IOException {
         String fileName;
         Regime regime;
+        int resultsLimitCnt;
 
         if (args == null || args.length == 0) {
             fileName = Main.defPath + Main.defType;
             regime = defRegime;
+            resultsLimitCnt = defResultsLimitCnt;
         } else {
             fileName = args[0];
             regime = Regime.valueOf(args[1]);
+            resultsLimitCnt = Integer.parseInt(args[2]);
         }
         GetDataRepository getDataRepository = new GetDataXssfRepositoryImpl(fileName);
 
-        Character character = getDataRepository.getCharacter();
+        Character character = getDataRepository.getCharacter(defAttributeFilterValue);
         Place[] places = getDataRepository.getPlaces();
         double[] base = new double[Constants.VAL_COUNT];
-        if (regime == Regime.FIND_DOUBLES ){
+        if (regime == Regime.FIND_DOUBLES) {
             base[Constants.Indexes.KRIT_S] = 10;
             base[Constants.Indexes.KRIT_V] = 50;
             base[Constants.Indexes.ZD] = 12000;
@@ -66,8 +67,7 @@ public class Main {
             base[Constants.Indexes.SKOR] = 85;
             base[Constants.Indexes.METK] = 0;
             base[Constants.Indexes.SOP] = 30;
-        }
-        else{
+        } else {
             base = getDataRepository.getBase();
         }
 
@@ -87,12 +87,12 @@ public class Main {
         double[] targetDelta = new double[targetDeltaReal.length];
 
         for (int i = 0; i < Constants.VAL_COUNT; i++) {
-            targetDelta[i] = Main.CALC_DELTA_MULTIPLIER * targetDeltaReal[i] - Main.CALC_DELTA;
+            targetDelta[i] = calcDeltaMultiplier * targetDeltaReal[i] - calcDelta;
         }
 
         BonusService bonusService = new BonusServiceImpl(possibleBonusesForSkips);
-        CalculationService calculationService = new CalculationServiceImpl(bonusService, baseAndLeagueAndZal, effectiveTarget);
-        FilterService filterService = new FilterServiceImpl();
+        CalculationService calculationService = new CalculationServiceImpl(bonusService, baseAndLeagueAndZal, effectiveTarget, resultsLimitCnt);
+        FilterService filterService = new FilterServiceImpl(calcAtrLimitCount);
 
         switch (regime) {
             case FIND_MAIN: {

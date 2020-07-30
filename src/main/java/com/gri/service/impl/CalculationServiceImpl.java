@@ -26,11 +26,16 @@ public class CalculationServiceImpl implements CalculationService {
     private final BonusService bonusService;
     private final double[] baseAndLeagueAndZal;
     private final double[] effectiveTarget;
+    private final int resultsLimitCnt;
 
-    public CalculationServiceImpl(BonusService bonusService, double[] baseAndLeagueAndZal, double[] effectiveTarget) {
+    public CalculationServiceImpl(BonusService bonusService,
+                                  double[] baseAndLeagueAndZal,
+                                  double[] effectiveTarget,
+                                  int resultsLimitCnt) {
         this.bonusService = bonusService;
         this.baseAndLeagueAndZal = baseAndLeagueAndZal;
         this.effectiveTarget = effectiveTarget;
+        this.resultsLimitCnt = resultsLimitCnt;
 
         for (double v : effectiveTarget) {
             checkEffectiveTarget = checkEffectiveTarget || v > 0;
@@ -39,7 +44,7 @@ public class CalculationServiceImpl implements CalculationService {
 
     @Override
     public List<Result> startCalculation(int index, Attribute[][] attribute, double[] targetDelta, Attribute[] cortege) {
-        if (attribute != null && (Main.RESULTS_LIMIT_CNT == 0 || resultList.size() <= Main.RESULTS_LIMIT_CNT - 1)) {
+        if (attribute != null && (resultsLimitCnt == 0 || resultList.size() <= resultsLimitCnt - 1)) {
             long t0 = System.currentTimeMillis();
             for (int i = 0; i < attribute[index].length; i++) {
                 if (index < Constants.PLACES_COUNT - 1) {

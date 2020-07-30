@@ -21,12 +21,17 @@ public class FilterServiceImpl implements FilterService {
     private static final Logger logger = LoggerFactory.getLogger(FilterServiceImpl.class);
 
     private final String EMPTY_CHARACTER_FIELDS_VALUE = "<<NONE>>";
+    private final int calcAtrLimitCount;
+
+    public FilterServiceImpl(int calcAtrLimitCount) {
+        this.calcAtrLimitCount = calcAtrLimitCount;
+    }
 
     @Override
     public Attribute[][] convertListToArray(Place[] places,
                                             List<Attribute> allAttributes,
                                             Character character) {
-        final Character newCharacter = (character == null) ? new Character(EMPTY_CHARACTER_FIELDS_VALUE, EMPTY_CHARACTER_FIELDS_VALUE, EMPTY_CHARACTER_FIELDS_VALUE) : character;
+        final Character newCharacter = (character == null) ? new Character(EMPTY_CHARACTER_FIELDS_VALUE, EMPTY_CHARACTER_FIELDS_VALUE, EMPTY_CHARACTER_FIELDS_VALUE, 0) : character;
         final boolean checkFraction = character != null;
 
         Map<String, List<Attribute>> mapOfAttributes = Arrays.stream(places)
@@ -103,11 +108,11 @@ public class FilterServiceImpl implements FilterService {
     private List<Attribute> getAttributeList(List<Attribute> allAttributes, String place, Character character, boolean checkFraction) {
         List<Attribute> result = allAttributes.stream()
                 .filter(attribute -> place.equals(attribute.placeName))
-                .filter(attribute -> attribute.filterFlag <= Main.ATTRIBUTE_FILTER_VALUE || character.name.equals(attribute.characterName))
+                .filter(attribute -> attribute.filterFlag <= character.attributeFilterValue || character.name.equals(attribute.characterName))
                 .filter(attribute -> !checkFraction || character.fraction.equals(attribute.type))
 //                .filter(attribute -> character.name.equals(attribute.characterName) || attribute.id == -1)
 //                .filter(attribute -> attribute.characterName == null || attribute.characterName.equals(""))
-                .limit((Main.CALC_ATR_COUNT > 0) ? Main.CALC_ATR_COUNT : Integer.MAX_VALUE)
+                .limit((calcAtrLimitCount > 0) ? calcAtrLimitCount : Integer.MAX_VALUE)
                 .collect(Collectors.toList());
         if (result.size() == 0) {
             result = Collections.singletonList(new Attribute(place));

@@ -1,15 +1,10 @@
 package com.gri.service;
 
-import com.gri.Main;
 import com.gri.model.Attribute;
 import com.gri.model.Character;
 import com.gri.model.Place;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public interface FilterService {
 
@@ -24,5 +19,7 @@ public interface FilterService {
 
     void setAttributeParentId(Attribute[][] attributes);
 
-    Attribute[][] filterAttributesByValues(Attribute[][] attributes);
+    Attribute[][] filterAttributesByDoubles(Attribute[][] attributes);
+
+    Attribute[][] filterAttributesByDoublesAndMask(Attribute[][] attributes, double[] target);
 }

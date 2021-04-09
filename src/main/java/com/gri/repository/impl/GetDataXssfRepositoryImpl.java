@@ -146,7 +146,7 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
     }
 
     @Override
-    public List<Attribute> getAllAttributes(double[] base, Map<String, Bonus> bonuses, Place[] places, double[] glyphs) {
+    public List<Attribute> getAllAttributes(double[] base, Map<String, Bonus> bonuses, Place[] places, double[] glyphs, Character character) {
         List<Attribute> result = new ArrayList<>();
         logger.info("get All Attributes");
         XSSFSheet sheet = workbook.getSheet(Constants.Sheets.ART);
@@ -157,7 +157,7 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
 
         for (int i = Constants.ATR_START_ROW; i <= cnt; i++) {
             XSSFRow row = sheet.getRow(i);
-            String character = XssfUtils.getStringValueSafe(row.getCell(Constants.Columns.CHARACTER_NAME));
+            String characterName = XssfUtils.getStringValueSafe(row.getCell(Constants.Columns.CHARACTER_NAME));
             String tmpCharacter = XssfUtils.getStringValueSafe(row.getCell(Constants.Columns.CHARACTER_NAME - 1));
             String place = XssfUtils.getStringValueSafe(row.getCell(Constants.Columns.PLACE));
             String type = XssfUtils.getStringValueSafe(row.getCell(Constants.Columns.TYPE));
@@ -175,21 +175,28 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
             boolean filter = false;
             Place pl = placeMap.get(place);
 
+
             if (pl != null) {
-                for (int j = 0; j < pl.filterPr.length; j++) {
-                    if (valuesPr[j] >= pl.filterPr[j]) {
-                        filter = true;
-                        break;
+                if (!character.name.equals(characterName)) {
+                    for (int j = 0; j < pl.filterPr.length; j++) {
+                        if (valuesPr[j] >= pl.filterPr[j]) {
+                            filter = true;
+                            break;
+                        }
                     }
-                }
-                for (int j = 0; j < pl.filterMain.length; j++) {
-                    if (values[j] >= pl.filterMain[j]) {
-                        filter = true;
-                        break;
+                    for (int j = 0; j < pl.filterMain.length; j++) {
+                        if (values[j] >= pl.filterMain[j]) {
+                            filter = true;
+                            break;
+                        }
                     }
+                } else {
+                    filter = true;
                 }
             }
             filter = filter && !rarity.equals("Нет");
+
+
             if (filter) {
                 // получение основных х-к (заливка - желтый цвет)
                 int mainPrIndex = XssfUtils.getColorIndex(sheet, i, Constants.Columns.ZD_PR, 3, "FFFFFF00");
@@ -211,7 +218,7 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
                 if (bonus == null && !pl.checkFraction) {
                     logger.info("Empty Bonus = {}", type);
                 }
-                Attribute attr = new Attribute(id, character, place, rarity, glyphsIndex, rank, type, bonus, filterFlag, values);
+                Attribute attr = new Attribute(id, characterName, place, rarity, glyphsIndex, rank, type, bonus, filterFlag, values);
                 attr.tmpCharacterName = tmpCharacter;
                 attr.place = pl;
                 result.add(attr);

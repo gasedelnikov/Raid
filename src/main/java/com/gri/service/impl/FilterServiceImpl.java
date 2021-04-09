@@ -64,10 +64,32 @@ public class FilterServiceImpl implements FilterService {
                 .collect(Collectors.toList()).toArray(new Attribute[0][0]);
     }
 
-    public Attribute[][] filterAttributesByValues(Attribute[][] attributes) {
+    @Override
+    public Attribute[][] filterAttributesByDoubles(Attribute[][] attributes) {
         Attribute[][] attributesTmp = Arrays.stream(attributes)
                 .map(tmpAttributes -> Arrays.stream(tmpAttributes)
                         .filter(attribute1 -> Arrays.stream(tmpAttributes).noneMatch(attribute1::filter))
+                        .collect(Collectors.toList()).toArray(new Attribute[0])
+                )
+                .collect(Collectors.toList())
+                .toArray(new Attribute[0][0]);
+
+        List<String> stats = new ArrayList<>();
+        int cnt = 0;
+        for (int i = 0; i < attributes.length; i++) {
+            cnt += attributes[i].length - attributesTmp[i].length;
+            stats.add(Integer.toString(attributes[i].length - attributesTmp[i].length));
+        }
+        logger.info("filter allCnt = {}; Counts: {}", cnt, String.join(", ", stats));
+
+        return attributesTmp;
+    }
+
+    @Override
+    public Attribute[][] filterAttributesByDoublesAndMask(Attribute[][] attributes, double[] target) {
+        Attribute[][] attributesTmp = Arrays.stream(attributes)
+                .map(tmpAttributes -> Arrays.stream(tmpAttributes)
+                        .filter(attribute1 -> Arrays.stream(tmpAttributes).noneMatch(attribute -> attribute1.filter(attribute, target)))
                         .collect(Collectors.toList()).toArray(new Attribute[0])
                 )
                 .collect(Collectors.toList())

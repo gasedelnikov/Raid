@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class CalculationServiceImpl implements CalculationService {
     private static Logger logger = LoggerFactory.getLogger(CalculationServiceImpl.class);
 
-    private List<Result> resultList = new ArrayList<>();
+//    private List<Result> resultList = new ArrayList<>();
     private boolean checkEffectiveTarget = false;
 
     private final BonusService bonusService;
@@ -40,7 +40,13 @@ public class CalculationServiceImpl implements CalculationService {
     }
 
     @Override
-    public List<Result> startCalculation(int index, Attribute[][] attribute, double[] targetDelta, Attribute[] cortege) {
+    public List<Result> startCalculation(Attribute[][] attribute, double[] targetDelta) {
+//        logger.info("start : {}", attribute[0][0]);
+        List<Result> resultList = new ArrayList<>();
+        return  startCalculation(0, attribute, targetDelta, new Attribute[0], resultList);
+    }
+
+    public List<Result> startCalculation(int index, Attribute[][] attribute, double[] targetDelta, Attribute[] cortege, List<Result> resultList) {
         if (attribute != null && (resultsLimitCnt == 0 || resultList.size() <= resultsLimitCnt - 1)) {
             long t0 = System.currentTimeMillis();
             for (int i = 0; i < attribute[index].length; i++) {
@@ -51,12 +57,12 @@ public class CalculationServiceImpl implements CalculationService {
 
 //                    logger.info("filterByCortege index = {}; lengths: {}", index, Arrays.stream(aa).map(attributes -> "" + attributes.length).collect(Collectors.joining(", ")));
                     if (aa != null) {
-                        startCalculation(index + 1, aa, targetDelta, newCortege);
+                        startCalculation(index + 1, aa, targetDelta, newCortege, resultList);
                     }
                 } else {
                     Attribute[] newCortege = Arrays.copyOf(cortege, index + 1);
                     newCortege[index] = (attribute[index][i]);
-                    calcAttributeCortege(targetDelta, newCortege);
+                    calcAttributeCortege(targetDelta, resultList, newCortege);
 //                    logger.info("calcAttributeCortege time = {}s", (System.currentTimeMillis() - t0) / 1000);
 
                 }
@@ -66,19 +72,18 @@ public class CalculationServiceImpl implements CalculationService {
 //                if (index > 0 && index <= 1) {
 //                    logger.info("{} : {}; index = {}/{}; time = {}s; goodCnt = {}", index, 100 * i / attribute[index].length, i, attribute[index].length, (System.currentTimeMillis() - t0) / 1000, resultList.size());
 //                }
-                if (index == 0) {
-                    logger.info("progress = {}%; index = {}/{}; time = {}s; goodCnt = {}", 100 * i / attribute[0].length, i, attribute[0].length, (System.currentTimeMillis() - t0) / 1000, resultList.size());
-                }
+//                if (index == 0) {
+//                    logger.info("progress = {}%; index = {}/{}; time = {}s; goodCnt = {}", 100 * i / attribute[0].length, i, attribute[0].length, (System.currentTimeMillis() - t0) / 1000, resultList.size());
+//                }
             }
-            if (index == 0) {
-                logger.info("END; goodCnt = {}; time = {}", resultList.size(), (System.currentTimeMillis() - t0) / 1000);
-            }
+//            if (index == 0) {
+//                logger.info("END; goodCnt = {}; time = {}", resultList.size(), (System.currentTimeMillis() - t0) / 1000);
+//            }
         }
         return resultList;
     }
 
-    @Override
-    public boolean calcAttributeCortege(double[] targetDelta, Attribute... attributes) {
+    public boolean calcAttributeCortege(double[] targetDelta, List<Result> resultList, Attribute... attributes) {
         double[] result = new double[Constants.VAL_COUNT];
         double[] bonuses = bonusService.getAttributeBonuses(attributes);
         targetDelta = Utils.getDelta(targetDelta, bonuses);
@@ -102,7 +107,7 @@ public class CalculationServiceImpl implements CalculationService {
 
         if (good) {
             resultList.add(new Result(attributes, bonuses));
-            logger.info("good {}: {}", resultList.size(), Arrays.stream(result).boxed().map(d -> Integer.toString(d.intValue())).collect(Collectors.joining("; ")));
+//            logger.info("good {}: {}", resultList.size(), Arrays.stream(result).boxed().map(d -> Integer.toString(d.intValue())).collect(Collectors.joining("; ")));
 //            logger.info("good: {}", Arrays.stream(attributes).map(Attribute::toString).collect(Collectors.joining("; ")));
         }
         return good;
@@ -124,21 +129,27 @@ public class CalculationServiceImpl implements CalculationService {
             for (int i = 0; i < Constants.PLACES_COUNT; i++) {  // по местам
                 tmpAttributes[i] = new Attribute[attributes[i].length];
                 int cnt = 0;
-                for (int j = 0; j < attributes[i].length; j++) { // по атрибутам
-                    if (attributes[i][j].filter(placesMax[i])) {
-                        tmpAttributes[i][cnt] = attributes[i][j];
-                        cnt++;
+
+                if (placesMax[i] != null) {
+                    for (int j = 0; j < attributes[i].length; j++) { // по атрибутам
+                        if (attributes[i][j].filter(placesMax[i])) {
+                            tmpAttributes[i][cnt] = attributes[i][j];
+                            cnt++;
+                        }
                     }
+                    endCnt += cnt;
+                    tmpAttributes[i] = Arrays.copyOf(tmpAttributes[i], cnt);
                 }
-                endCnt += cnt;
-                tmpAttributes[i] = Arrays.copyOf(tmpAttributes[i], cnt);
+                else{
+                    endCnt = attributes[i].length;
+                    tmpAttributes[i] = attributes[i];
+                }
             }
             attributes = tmpAttributes;
         }
         return attributes;
     }
 
-    @Override
     public Attribute[][] filterByCortege(double[] targetDelta, Attribute[][] attribute, Attribute[] cortege) {
         Attribute[][] result = new Attribute[Constants.PLACES_COUNT][];
         for (int i = 0; i < Constants.PLACES_COUNT; i++) {
@@ -155,19 +166,33 @@ public class CalculationServiceImpl implements CalculationService {
         int[][] placesMax = new int[Constants.PLACES_COUNT][Constants.VAL_COUNT];
         int[] valuesMax = new int[Constants.VAL_COUNT];
         for (int i = 0; i < Constants.VAL_COUNT; i++) { // по хар-кам
-            for (int j = 0; j < Constants.PLACES_COUNT; j++) {  // по местам
-                double max = 0;
-                for (int k = 0; k < attributes[j].length; k++) { // по атрибутам
-                    max = Math.max(attributes[j][k].values[i], max);
+            if (targetDelta[i] > 0) {
+                for (int j = 0; j < Constants.PLACES_COUNT; j++) {  // по местам
+                    double max = 0;
+                    for (int k = 0; k < attributes[j].length; k++) { // по атрибутам
+                        max = Math.max(attributes[j][k].values[i], max);
+                    }
+                    placesMax[j][i] = (int) max;
+                    valuesMax[i] += (int) max;
                 }
-                placesMax[j][i] = (int) max;
-                valuesMax[i] += max;
-            }
-            valuesMax[i] = ((int) targetDelta[i]) - valuesMax[i];
-            for (int j = 0; j < Constants.PLACES_COUNT; j++) { // по местам
-                placesMax[j][i] += valuesMax[i];
+                valuesMax[i] = ((int) targetDelta[i]) - valuesMax[i];
+
+                for (int j = 0; j < Constants.PLACES_COUNT; j++) { // по местам
+                    placesMax[j][i] += valuesMax[i];
+                }
             }
         }
+
+        for (int j = 0; j < Constants.PLACES_COUNT; j++) {
+            boolean setNull = true;
+            for (int i = 0; i < Constants.VAL_COUNT; i++) {
+                setNull = setNull && placesMax[j][i] <= 0;
+            }
+            if (setNull){
+                placesMax[j] = null;
+            }
+        }
+
         return placesMax;
     }
 

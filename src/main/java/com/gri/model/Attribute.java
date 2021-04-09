@@ -52,23 +52,14 @@ public class Attribute {
 
     public boolean filter(int[] filterValues) {
         int i = 0;
-        boolean result = true;
-        while (i < values.length && result) {
-            result = values[i] >= filterValues[i];
-            i++;
-        }
-        return result;
-    }
+        boolean result;
 
-    public boolean filter(double[] filterValues) {
-        int i = 0;
-        boolean result = true;
-        while (i < values.length && result) {
-//            result = values[i] >= Math.floor(filterValues[i]);
-            result = values[i] >= (int) filterValues[i];
-//            result = values[i] >= filterValues[i];
+        do {
+            result = filterValues[i] <= 0 || values[i] >= filterValues[i];
             i++;
         }
+        while (result && i < Constants.ATR_VALUES_COUNT);
+
         return result;
     }
 
@@ -83,6 +74,35 @@ public class Attribute {
             while (i < this.values.length && greatOrEquals) {
                 greatOrEquals = attribute.values[i] >= this.values[i];
                 equals = equals && attribute.values[i] == this.values[i];
+                i++;
+            }
+            if (equals) {
+                greatOrEquals = this.id > attribute.id;
+            }
+//            if (greatOrEquals) {
+//                List<String> s1 = Arrays.stream(attribute.values).mapToObj(Double::toString).collect(Collectors.toList());
+//                List<String> s2 = Arrays.stream(values).mapToObj(Double::toString).collect(Collectors.toList());
+//                logger.info("1 id = {}; bonusType = {}; s1 = {}", attribute.id, attribute.bonusType, s1);
+//                logger.info("2 id = {}; bonusType = {}; s2 = {}", id, bonusType, s2);
+//                logger.info("");
+//            }
+        } else {
+            greatOrEquals = false;
+        }
+        return greatOrEquals;
+    }
+
+    public boolean filter(Attribute attribute, double[] mask) {
+        int i = 0;
+        boolean greatOrEquals = true;
+        boolean equals = true;
+        if (this.id != attribute.id &&
+                this.bonusType == attribute.bonusType &&
+                this.placeName.equals(attribute.placeName) &&
+                (!this.place.checkFraction || this.type.equals(attribute.type))) {
+            while (i < this.values.length && greatOrEquals) {
+                greatOrEquals = mask[i] == 0 || attribute.values[i] >= this.values[i];
+                equals = equals && (mask[i] == 0 || attribute.values[i] == this.values[i]);
                 i++;
             }
             if (equals) {

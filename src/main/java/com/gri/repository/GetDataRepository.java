@@ -27,7 +27,7 @@ public interface GetDataRepository {
 
     Map<String, Bonus> getBonuses(double[] base);
 
-    List<Attribute> getAllAttributes(double[] base, Map<String, Bonus> bonuses, Place[] places, double[] glyphs);
+    List<Attribute> getAllAttributes(double[] base, Map<String, Bonus> bonuses, Place[] places, double[] glyphs, Character character);
 
     void close() throws IOException;
 }

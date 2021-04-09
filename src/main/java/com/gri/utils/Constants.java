@@ -20,7 +20,7 @@ public class Constants {
     public static final int VAL_EFFECTIVE_COUNT = 4;
 
     public static final int BONUSES_ROW_START = 1;
-    public static final int BONUSES_ROW_END = 36;
+    public static final int BONUSES_ROW_END = 43;
     public static final int BONUSES_COLL_START = 0;
     public static final int BONUSES_COLL_COUNT = 9;
     public static final int BONUSES_VAL_COUNT = 9;

@@ -91,11 +91,11 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
     }
 
     private void saveFile() throws IOException {
-        logger.info("save result to File {}", outFileName);
         FileOutputStream fos = new FileOutputStream(outFileName);
         workbook.write(fos);
         fos.close();
         workbook.close();
+        logger.info("save result to File {}", outFileName);
     }
 
     private void putSummaryResult(List<Result> resultList, Character character, double[] baseAndLeagueAndZal) {

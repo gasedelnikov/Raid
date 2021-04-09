@@ -7,9 +7,9 @@ import java.util.List;
 
 public interface CalculationService {
 
-    List<Result> startCalculation(int index, Attribute[][] attribute, double[] targetDelta, Attribute[] cortege);
+    List<Result> startCalculation(Attribute[][] attribute, double[] targetDelta);
 
-    boolean calcAttributeCortege(double[] targetDelta, Attribute... attributes);
+//    boolean calcAttributeCortege(double[] targetDelta, Attribute... attributes);
 
     Attribute[][] filterAttributesRecursive(Attribute[][] attributes, double[] targetDelta);
 

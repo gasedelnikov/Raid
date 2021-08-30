@@ -5,7 +5,7 @@ import com.gri.utils.XssfUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Attribute {
+public class Attribute implements Comparable{
     private static Logger logger = LoggerFactory.getLogger(XssfUtils.class);
 
     public double id;
@@ -21,6 +21,9 @@ public class Attribute {
     public double filterFlag;
     public Place place;
     public double parentId;
+
+    public double targetPriority;
+    public double maxValuePriority;
 
     public double[] values;
 
@@ -41,13 +44,34 @@ public class Attribute {
     public Attribute(String placeName) {
         this.id = -1;
         this.placeName = placeName;
-        this.place = new Place(placeName, true, 0, null, null);
+        this.place = new Place(0, placeName, true, 0, null, null);
         this.type = "Заглушка";
         this.characterName = this.type;
         this.glyphsIndex = Double.MAX_VALUE;
         this.bonus = null;
         this.bonusType = 0;
         this.values = new double[Constants.ATR_VALUES_COUNT];
+    }
+
+    public void setTargetPriority(double[] target) {
+        int targets = 0;
+        for (int i = 0; i < values.length; i++) {
+            if (target[i] > 0) {
+                double bonusAdd = (bonus == null) ? 0 : bonus.values[i] * bonus.quantum;
+                this.targetPriority += (values[i] + bonusAdd) / target[i];
+                targets++;
+            }
+        }
+        this.targetPriority /= targets;
+    }
+
+    public void setMaxValuePriority(double[] target) {
+        for (int i = 0; i < values.length; i++) {
+            if (target[i] > 0) {
+                double bonusAdd = (bonus == null) ? 0 : bonus.values[i] * bonus.quantum;
+                this.maxValuePriority += (values[i] + bonusAdd) / target[i];
+            }
+        }
     }
 
     public boolean filter(int[] filterValues) {
@@ -101,8 +125,8 @@ public class Attribute {
                 this.placeName.equals(attribute.placeName) &&
                 (!this.place.checkFraction || this.type.equals(attribute.type))) {
             while (i < this.values.length && greatOrEquals) {
-                greatOrEquals = mask[i] == 0 || attribute.values[i] >= this.values[i];
-                equals = equals && (mask[i] == 0 || attribute.values[i] == this.values[i]);
+                greatOrEquals = mask[i] <= 0 || attribute.values[i] >= this.values[i];
+                equals = equals && (mask[i] <= 0 || attribute.values[i] == this.values[i]);
                 i++;
             }
             if (equals) {
@@ -129,5 +153,10 @@ public class Attribute {
                 ", place='" + placeName + '\'' +
                 ", type='" + type + '\'' +
                 '}';
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        return Double.compare(((Attribute)o).maxValuePriority, this.maxValuePriority);
     }
 }

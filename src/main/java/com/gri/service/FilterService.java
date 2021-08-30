@@ -21,5 +21,5 @@ public interface FilterService {
 
     Attribute[][] filterAttributesByDoubles(Attribute[][] attributes);
 
-    Attribute[][] filterAttributesByDoublesAndMask(Attribute[][] attributes, double[] target);
+    Attribute[][] filterAttributesByDoublesAndMask(Attribute[][] attributes, double[] target, Character character);
 }

@@ -6,9 +6,9 @@ import com.gri.model.Character;
 import com.gri.model.Place;
 import com.gri.model.Regime;
 import com.gri.model.Result;
-import com.gri.repository.GetDataRepository;
+import com.gri.repository.DataRepository;
 import com.gri.repository.SaveDataRepository;
-import com.gri.repository.impl.GetDataXssfRepositoryImpl;
+import com.gri.repository.impl.DataXssfRepositoryImpl;
 import com.gri.repository.impl.SaveDataXssfRepositoryImpl;
 import com.gri.service.BonusService;
 import com.gri.service.CalculationService;
@@ -25,12 +25,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -39,7 +39,7 @@ public class Main {
     private static final int calcDelta = 0;
     private static final double calcDeltaMultiplier = 1;
 
-    private static final String defPath = "C:\\Users\\grse1118\\Desktop\\Raid200824";
+    private static final String defPath = "C:\\Users\\grse1118\\Desktop\\Raid210117";
     private static final String defType = ".xlsx";
     private static final Regime defRegime = Regime.FIND_MULTI_THREAD;
     private static final Double defAttributeFilterValue = null;
@@ -59,10 +59,10 @@ public class Main {
             regime = Regime.valueOf(args[1]);
             resultsLimitCnt = Integer.parseInt(args[2]);
         }
-        GetDataRepository getDataRepository = new GetDataXssfRepositoryImpl(fileName);
+        DataRepository dataRepository = new DataXssfRepositoryImpl(fileName);
 
-        Character character = getDataRepository.getCharacter(defAttributeFilterValue);
-        Place[] places = getDataRepository.getPlaces();
+        Character character = dataRepository.getCharacter(defAttributeFilterValue);
+        Place[] places = dataRepository.getPlaces();
         double[] base = new double[Constants.VAL_COUNT];
         if (regime == Regime.FIND_DOUBLES) {
             base[Constants.Indexes.KRIT_S] = 10;
@@ -74,19 +74,19 @@ public class Main {
             base[Constants.Indexes.METK] = 0;
             base[Constants.Indexes.SOP] = 30;
         } else {
-            base = getDataRepository.getBase();
+            base = dataRepository.getBase();
         }
 
-        double[] leagueAndZal = getDataRepository.getLeagueAndZal(base);
-        double[] target = getDataRepository.getTarget();
-        double[] effectiveTarget = getDataRepository.getEffectiveTarget();
-        double[] glyphs = getDataRepository.getGlyphs();
-        Map<String, Bonus> bonuses = getDataRepository.getBonuses(base);
+        double[] leagueAndZal = dataRepository.getLeagueAndZal(base);
+        double[] target = dataRepository.getTarget();
+        double[] effectiveTarget = dataRepository.getEffectiveTarget();
+        double[] glyphs = dataRepository.getGlyphs();
+        Map<String, Bonus> bonuses = dataRepository.getBonuses(base);
 
         Map<Double, double[]> possibleBonusesForSkips = Utils.getPossibleBonusesForSkips(bonuses);
 
-        List<Attribute> allAttributes = getDataRepository.getAllAttributes(base, bonuses, places, glyphs, character);
-        getDataRepository.close();
+        List<Attribute> allAttributes = dataRepository.getAllAttributes(base, bonuses, places, glyphs, character);
+        dataRepository.close();
 
         double[] baseAndLeagueAndZal = Utils.getSum(base, leagueAndZal);
         double[] targetDeltaReal = Utils.getDelta(target, baseAndLeagueAndZal);
@@ -96,6 +96,14 @@ public class Main {
             targetDelta[i] = calcDeltaMultiplier * targetDeltaReal[i] - calcDelta;
         }
 
+        int startSize = allAttributes.size();
+        allAttributes = allAttributes
+                .stream()
+                .peek(attribute -> attribute.setTargetPriority(targetDelta))
+                .filter(attribute -> attribute.targetPriority > 0)
+                .collect(Collectors.toList());
+        logger.info("filter by targetPriority = {};", startSize - allAttributes.size());
+
         BonusService bonusService = new BonusServiceImpl(possibleBonusesForSkips);
         CalculationService calculationService = new CalculationServiceImpl(bonusService, baseAndLeagueAndZal, effectiveTarget, resultsLimitCnt);
         FilterService filterService = new FilterServiceImpl(calcAtrLimitCount);
@@ -103,8 +111,9 @@ public class Main {
         final long startTime = System.currentTimeMillis();
         switch (regime) {
             case FIND_MULTI_THREAD:{
+
                 Attribute[][] attributes = filterService.convertListToArray(places, allAttributes, character);
-                attributes = filterService.filterAttributesByDoublesAndMask(attributes, target);
+               attributes = filterService.filterAttributesByDoublesAndMask(attributes, targetDelta, character);
 
                 double[] tmpTargetDelta = Utils.getDelta(targetDelta, bonusService.getAttributeBonuses());
                 final Attribute[][] attribFiltered = calculationService.filterAttributesRecursive(attributes, tmpTargetDelta);

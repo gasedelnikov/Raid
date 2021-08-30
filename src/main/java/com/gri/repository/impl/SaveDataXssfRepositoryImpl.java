@@ -198,6 +198,8 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
                 setDoubleValueInXLS(sheet, row, Constants.VAL_COLL_START + 1 + j, attributes[i].values[j]);
             }
             setDoubleValueInXLS(sheet, row, Constants.VAL_COLL_START + 1 + Constants.PLACES_COUNT, attributes[i].id);
+            setDoubleValueInXLS(sheet, row, Constants.VAL_COLL_START + 2 + Constants.PLACES_COUNT, attributes[i].targetPriority);
+            setDoubleValueInXLS(sheet, row, Constants.VAL_COLL_START + 3 + Constants.PLACES_COUNT, attributes[i].maxValuePriority);
         }
     }
 

@@ -4,12 +4,16 @@ public class Character {
     public String name;
     public String fraction;
     public String element;
-    public double attributeFilterValue;
+    public double attributeGroupFilterValue;
+    public double priorityFilterValue;
+    public double priorityLimitFilterValue;
 
-    public Character(String name, String fraction, String element, double attributeFilterValue) {
+    public Character(String name, String fraction, String element, double attributeGroupFilterValue, double priorityFilterValue, double priorityLimitFilterValue) {
         this.name = name;
         this.fraction = fraction;
         this.element = element;
-        this.attributeFilterValue = attributeFilterValue;
+        this.attributeGroupFilterValue = attributeGroupFilterValue;
+        this.priorityFilterValue = priorityFilterValue;
+        this.priorityLimitFilterValue = priorityLimitFilterValue;
     }
 }

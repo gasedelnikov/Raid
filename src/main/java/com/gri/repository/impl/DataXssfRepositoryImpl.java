@@ -1,6 +1,6 @@
 package com.gri.repository.impl;
 
-import com.gri.repository.GetDataRepository;
+import com.gri.repository.DataRepository;
 import com.gri.model.Attribute;
 import com.gri.model.Bonus;
 import com.gri.model.Character;
@@ -24,12 +24,12 @@ import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class GetDataXssfRepositoryImpl implements GetDataRepository {
-    private Logger logger = LoggerFactory.getLogger(GetDataXssfRepositoryImpl.class);
+public class DataXssfRepositoryImpl implements DataRepository {
+    private Logger logger = LoggerFactory.getLogger(DataXssfRepositoryImpl.class);
 
     private XSSFWorkbook workbook;
 
-    public GetDataXssfRepositoryImpl(String fileName) throws IOException {
+    public DataXssfRepositoryImpl(String fileName) throws IOException {
         workbook = XssfUtils.getWorkbook(fileName);
     }
 
@@ -47,11 +47,14 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
         String fraction = XssfUtils.getStringValueSafe(sheet.getRow(Constants.Character.ROW_INDEX_FRACTION).getCell(Constants.Character.COLL_INDEX_FRACTION));
 
         if (attributeFilterValue == null) {
-            attributeFilterValue = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Character.ROW_INDEX_FILTER).getCell(Constants.Character.COLL_INDEX_FILTER));
+            attributeFilterValue = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Filter.ROW_INDEX_GROUP_FILTER).getCell(Constants.Filter.COLL_INDEX_FILTER));
         }
 
+        double priorityFilterValue = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Filter.ROW_INDEX_PRIORITY_FILTER).getCell(Constants.Filter.COLL_INDEX_FILTER));
+        double priorityLimitFilterValue = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Filter.ROW_INDEX_PRIORITY_COUNT_FILTER).getCell(Constants.Filter.COLL_INDEX_FILTER));
+
         logger.info("loaded Character; name = {}, fraction = {}, element = {}, filter value = {}", name, fraction, element, attributeFilterValue);
-        return (new Character(name, fraction, element, attributeFilterValue));
+        return (new Character(name, fraction, element, attributeFilterValue, priorityFilterValue, priorityLimitFilterValue));
     }
 
     @Override
@@ -66,7 +69,7 @@ public class GetDataXssfRepositoryImpl implements GetDataRepository {
             double[] t1 = getAttributeColorFilter(sheet, Constants.PLACES_ROW + 2, Constants.PLACES_COLL_START + i, 3, 3, 0);
             double[] t2 = getAttributeColorFilter(sheet, Constants.PLACES_ROW + 5, Constants.PLACES_COLL_START + i, 3, 8, 1);
 
-            placeList.add(new Place(names[i], i > 5, (int) orderByArray[i], t1, t2));
+            placeList.add(new Place(i, names[i], i > 5, (int) orderByArray[i], t1, t2));
         }
         return placeList.stream().sorted(Comparator.comparingInt(i -> i.orderBy)).toArray(Place[]::new);
     }

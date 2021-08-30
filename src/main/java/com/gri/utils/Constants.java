@@ -35,9 +35,6 @@ public class Constants {
 
         public static final int ROW_INDEX_FRACTION = 2;
         public static final int COLL_INDEX_FRACTION = 0;
-
-        public static final int ROW_INDEX_FILTER = 3;
-        public static final int COLL_INDEX_FILTER = 0;
     }
 
     public static class Filter {
@@ -48,6 +45,11 @@ public class Constants {
 
         public static final int COLOR_FILTER_KEY = 32;
         public static final int COLOR_FILTER_INDEX = 33;
+
+        public static final int COLL_INDEX_FILTER = 0;
+        public static final int ROW_INDEX_GROUP_FILTER = 3;
+        public static final int ROW_INDEX_PRIORITY_FILTER = 4;
+        public static final int ROW_INDEX_PRIORITY_COUNT_FILTER = 5;
     }
 
     public static class Indexes {
@@ -84,7 +86,7 @@ public class Constants {
         public static final int METK = 19;
         public static final int ID = 20;
         public static final int PARENT_ID = 24;
-        public static final int FILTER_FLAG = 25;
+        public static final int FILTER_FLAG = 26;
 
     }
 

@@ -12,10 +12,9 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class CalculationServiceImpl implements CalculationService {
-    private static Logger logger = LoggerFactory.getLogger(CalculationServiceImpl.class);
+public class CalculationTargetServiceImpl implements CalculationService {
+    private static Logger logger = LoggerFactory.getLogger(CalculationTargetServiceImpl.class);
 
 //    private List<Result> resultList = new ArrayList<>();
     private boolean checkEffectiveTarget = false;
@@ -25,10 +24,10 @@ public class CalculationServiceImpl implements CalculationService {
     private final double[] effectiveTarget;
     private final int resultsLimitCnt;
 
-    public CalculationServiceImpl(BonusService bonusService,
-                                  double[] baseAndLeagueAndZal,
-                                  double[] effectiveTarget,
-                                  int resultsLimitCnt) {
+    public CalculationTargetServiceImpl(BonusService bonusService,
+                                        double[] baseAndLeagueAndZal,
+                                        double[] effectiveTarget,
+                                        int resultsLimitCnt) {
         this.bonusService = bonusService;
         this.baseAndLeagueAndZal = baseAndLeagueAndZal;
         this.effectiveTarget = effectiveTarget;

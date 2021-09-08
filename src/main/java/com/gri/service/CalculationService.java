@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface CalculationService {
 
+    List<Result> startCalculation(int i, int j, Attribute[][] attribute, double[] targetDelta);
+
     List<Result> startCalculation(Attribute[][] attribute, double[] targetDelta);
 
 //    boolean calcAttributeCortege(double[] targetDelta, Attribute... attributes);

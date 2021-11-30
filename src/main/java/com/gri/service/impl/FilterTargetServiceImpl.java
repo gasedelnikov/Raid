@@ -75,17 +75,24 @@ public class FilterTargetServiceImpl  {
                 .collect(Collectors.toList());
         logger.info("filter by targetPriority = {};", startSize - tmpAttributes.size());
 
-        Map<String, List<Attribute>> mapOfAttributes = Arrays.stream(places)
-                .collect(Collectors.toMap(place -> place.name,
+        Map<Place, List<Attribute>> mapOfAttributes = Arrays.stream(places)
+                .collect(Collectors.toMap(place -> place,
                         place -> getAttributeList(allAttributes, place.name, place.checkFraction)));
 
-        List<Pair<String, Double>> listMax = Arrays.stream(places)
-                .map(place -> new Pair<>(place.name, mapOfAttributes.get(place.name).stream()
+        List<Pair<Place, Double>> listMax = Arrays.stream(places)
+                .map(place -> new Pair<>(place, mapOfAttributes.get(place).stream()
                         .map(a -> a.targetPriority)
                         .max(Double::compareTo)
                         .orElse(0.0)))
 //                .sorted(Comparator.comparingDouble(Pair::getValue))
-                .sorted((p1,p2) -> Double.compare(p2.getValue(), p1.getValue()))
+                .sorted((p1,p2) -> {
+                    if (p1.getKey().checkFraction){
+                        return 1;
+                    }
+                    else {
+                        return Double.compare(p2.getValue(), p1.getValue());
+                    }
+                })
                 .collect(Collectors.toList());
 
         this.sumTargetPriority = listMax.stream().map(Pair::getValue).reduce(Double::sum).orElse(0.0);
@@ -144,6 +151,7 @@ public class FilterTargetServiceImpl  {
         List<Attribute> result = allAttributes.stream()
                 .filter(attribute -> place.equals(attribute.placeName))
                 .filter(attribute -> attribute.filterFlag <= character.attributeGroupFilterValue || character.name.equals(attribute.characterName))
+                .filter(attribute -> attribute.rank >= character.rankFilterValue || character.name.equals(attribute.characterName))
                 .filter(attribute -> !checkFraction || character.fraction.equals(attribute.type))
                 .collect(Collectors.toList());
         if (result.size() == 0) {

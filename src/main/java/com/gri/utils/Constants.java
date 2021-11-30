@@ -20,7 +20,7 @@ public class Constants {
     public static final int VAL_EFFECTIVE_COUNT = 4;
 
     public static final int BONUSES_ROW_START = 1;
-    public static final int BONUSES_ROW_END = 46;
+    public static final int BONUSES_ROW_END = 60;
     public static final int BONUSES_COLL_START = 0;
     public static final int BONUSES_COLL_COUNT = 9;
     public static final int BONUSES_VAL_COUNT = 9;
@@ -48,7 +48,7 @@ public class Constants {
 
         public static final int COLL_INDEX_FILTER = 0;
         public static final int ROW_INDEX_GROUP_FILTER = 3;
-        public static final int ROW_INDEX_PRIORITY_FILTER = 4;
+        public static final int ROW_RANK_FILTER = 4;
         public static final int ROW_INDEX_PRIORITY_COUNT_FILTER = 5;
     }
 
@@ -73,6 +73,7 @@ public class Constants {
         public static final int GLYPHS = 6;
         public static final int RANK = 7;
         public static final int TYPE = 8;
+
         public static final int ZD_PR = 9;
         public static final int ATK_PR = 10;
         public static final int DEF_PR = 11;
@@ -101,7 +102,7 @@ public class Constants {
         public static final int ALL_START_ROW = 1;
         public static final int ALL_START_CELL = 0;
         public static final int ALL_CNT_ROW = 10;
-        public static final String ALL_BONUS_TEXT = "Бонусы";
+        public static final String ALL_BONUS_TEXT = "Bonuses";
 
         public static final int SUMMARY_START_ROW = 10;
         public static final int SUMMARY_START_CELL = 0;

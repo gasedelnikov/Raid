@@ -13,6 +13,8 @@ import java.util.Map;
 public class BonusServiceImpl implements BonusService {
     private static Logger logger = LoggerFactory.getLogger(BonusServiceImpl.class);
 
+    private static final int ATTRIBUTE_CNT_MAX = 6;
+
     private Map<Double, double[]> possibleBonusesForSkips;
 
     public BonusServiceImpl(Map<Double, double[]> possibleBonusesForSkips) {
@@ -23,7 +25,8 @@ public class BonusServiceImpl implements BonusService {
     public double[] getAttributeBonuses(Attribute... attributes) {
         int pairCnt = 0;
         int attributeCnt = 0;
-        int krazaCnt = 0;
+        int targetBonusesCnt = 0;
+        Bonus targetBonus = null;
 
         double[] result = new double[Constants.BONUSES_VAL_COUNT];
         Map<Bonus, Integer> bonusMap = new HashMap<>();
@@ -32,7 +35,10 @@ public class BonusServiceImpl implements BonusService {
                 attributeCnt++;
                 if (attribute.bonus != null) {
                     if (attribute.bonus.values != null && attribute.bonus.values[Constants.Indexes.KRAZA] > 0) {
-                        krazaCnt++;
+                        targetBonusesCnt++;
+                        if (targetBonus == null){
+                            targetBonus = attribute.bonus;
+                        }
                     }
 
                     Bonus bonus = attribute.bonus;
@@ -55,18 +61,32 @@ public class BonusServiceImpl implements BonusService {
             }
         }
 
-        int skips = (attributeCnt > 6) ? 0 : 6 - attributeCnt;
+        int skips = (attributeCnt > ATTRIBUTE_CNT_MAX) ? 0 : ATTRIBUTE_CNT_MAX - attributeCnt;
         if (skips >= 1) {
             double[] values = possibleBonusesForSkips.get(0.5);
-            int m = Math.min(skips, (int) (6 - pairCnt * 0.5));
+            int m = Math.min(skips, (int) (ATTRIBUTE_CNT_MAX - pairCnt * 0.5));
             if (m >= 1) {
                 for (int i = 0; i < Constants.BONUSES_VAL_COUNT; i++) {
                     result[i] += m * values[i];
                 }
             }
+
+//            values = possibleBonusesForSkips.get(0.25);
+//            m = Math.min(skips, (int) (ATTRIBUTE_CNT_MAX - pairCnt * 0.25));
+//            if (m >= 1) {
+//                for (int i = 0; i < Constants.BONUSES_VAL_COUNT; i++) {
+//                    result[i] += m * values[i];
+//                }
+//            }
         }
-        if (skips + krazaCnt >= 4) {
-            result[Constants.Indexes.KRAZA] = 1;
+
+
+//        if (skips + targetBonusesCnt >= 4) {
+//            result[Constants.Indexes.KRAZA] = 1;
+//        }
+        if (targetBonus != null) {
+            int cnt = (int) ((skips + targetBonusesCnt) * targetBonus.quantum);
+            result[Constants.Indexes.KRAZA] = cnt;
         }
         return result;
     }

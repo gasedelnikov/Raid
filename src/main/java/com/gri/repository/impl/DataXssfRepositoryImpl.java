@@ -50,11 +50,12 @@ public class DataXssfRepositoryImpl implements DataRepository {
             attributeFilterValue = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Filter.ROW_INDEX_GROUP_FILTER).getCell(Constants.Filter.COLL_INDEX_FILTER));
         }
 
-        double priorityFilterValue = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Filter.ROW_INDEX_PRIORITY_FILTER).getCell(Constants.Filter.COLL_INDEX_FILTER));
+//        double priorityFilterValue = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Filter.ROW_INDEX_PRIORITY_FILTER).getCell(Constants.Filter.COLL_INDEX_FILTER));
+        double rankFilterValue = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Filter.ROW_RANK_FILTER).getCell(Constants.Filter.COLL_INDEX_FILTER));
         double priorityLimitFilterValue = XssfUtils.getDoubleValueSafe(sheet.getRow(Constants.Filter.ROW_INDEX_PRIORITY_COUNT_FILTER).getCell(Constants.Filter.COLL_INDEX_FILTER));
 
         logger.info("loaded Character; name = {}, fraction = {}, element = {}, filter value = {}", name, fraction, element, attributeFilterValue);
-        return (new Character(name, fraction, element, attributeFilterValue, priorityFilterValue, priorityLimitFilterValue));
+        return (new Character(name, fraction, element, attributeFilterValue, rankFilterValue, priorityLimitFilterValue));
     }
 
     @Override
@@ -73,6 +74,32 @@ public class DataXssfRepositoryImpl implements DataRepository {
         }
         return placeList.stream().sorted(Comparator.comparingInt(i -> i.orderBy)).toArray(Place[]::new);
     }
+
+    @Override
+    public Place[] getPlaces(int limit) {
+        return getPlaces(limit, true);
+    }
+
+    @Override
+    public Place[] getPlaces(int limit, boolean setFilter) {
+        logger.info("get Places");
+        XSSFSheet sheet = workbook.getSheet(Constants.Sheets.FIND);
+        String[] names = XssfUtils.getStringArray(sheet, Constants.PLACES_ROW, Constants.PLACES_COLL_START, Constants.PLACES_COUNT);
+        double[] orderByArray = XssfUtils.getDoubleArray(sheet, Constants.PLACES_ROW + 1, Constants.PLACES_COLL_START, Constants.PLACES_COUNT);
+
+        List<Place> placeList = new ArrayList<>();
+        for (int i = 0; i < Constants.PLACES_COUNT; i++) {
+            double[] t1 = new double[3];
+            double[] t2 = new double[8];
+            if (setFilter) {
+               t1 = getAttributeColorFilter(sheet, Constants.PLACES_ROW + 2, Constants.PLACES_COLL_START + i, 3, 3, 0);
+               t2 = getAttributeColorFilter(sheet, Constants.PLACES_ROW + 5, Constants.PLACES_COLL_START + i, 3, 8, 1);
+            }
+            placeList.add(new Place(i, names[i], i > 5, (int) orderByArray[i], t1, t2));
+        }
+        return placeList.stream().limit(limit).toArray(Place[]::new);
+    }
+
 
     @Override
     public double[] getBase() {
@@ -129,20 +156,24 @@ public class DataXssfRepositoryImpl implements DataRepository {
         XSSFSheet sheet = workbook.getSheet(Constants.Sheets.SETS);
         for (int i = Constants.BONUSES_ROW_START; i < Constants.BONUSES_ROW_END; i++) {
             XSSFRow row = sheet.getRow(i);
-            String name = XssfUtils.getStringValueSafe(row.getCell(Constants.BONUSES_COLL_START));
-            double quantum = 1.0 / XssfUtils.getDoubleValueSafe(row.getCell(Constants.BONUSES_COLL_START + 1));
-            double type = XssfUtils.getDoubleValueSafe(row.getCell(Constants.BONUSES_COLL_TYPE));
+            if (row != null) {
+                String name = XssfUtils.getStringValueSafe(row.getCell(Constants.BONUSES_COLL_START));
+                if (!"".equals(name)) {
+                    double quantum = 1.0 / XssfUtils.getDoubleValueSafe(row.getCell(Constants.BONUSES_COLL_START + 1));
+                    double type = XssfUtils.getDoubleValueSafe(row.getCell(Constants.BONUSES_COLL_TYPE));
 
-            double[] valuesPr = XssfUtils.getDoubleArray(sheet, i, Constants.BONUSES_COLL_START + 2, 3);
-            double[] values = XssfUtils.getDoubleArray(sheet, i, Constants.BONUSES_COLL_START + 5, Constants.BONUSES_COLL_COUNT);
+                    double[] valuesPr = XssfUtils.getDoubleArray(sheet, i, Constants.BONUSES_COLL_START + 2, 3);
+                    double[] values = XssfUtils.getDoubleArray(sheet, i, Constants.BONUSES_COLL_START + 5, Constants.BONUSES_COLL_COUNT);
 
-            values[Constants.Indexes.ZD] = base[Constants.Indexes.ZD] * valuesPr[0];
-            values[Constants.Indexes.ATK] = base[Constants.Indexes.ATK] * valuesPr[1];
-            values[Constants.Indexes.DEF] = base[Constants.Indexes.DEF] * valuesPr[2];
-            values[Constants.Indexes.SKOR] = base[Constants.Indexes.SKOR] * values[Constants.Indexes.SKOR];
+                    values[Constants.Indexes.ZD] = base[Constants.Indexes.ZD] * valuesPr[0];
+                    values[Constants.Indexes.ATK] = base[Constants.Indexes.ATK] * valuesPr[1];
+                    values[Constants.Indexes.DEF] = base[Constants.Indexes.DEF] * valuesPr[2];
+                    values[Constants.Indexes.SKOR] = base[Constants.Indexes.SKOR] * values[Constants.Indexes.SKOR];
 
-            Bonus bonus = new Bonus(name, quantum, values, type);
-            result.put(name, bonus);
+                    Bonus bonus = new Bonus(name, quantum, values, type);
+                    result.put(name, bonus);
+                }
+            }
         }
 
         return result;
@@ -161,6 +192,10 @@ public class DataXssfRepositoryImpl implements DataRepository {
         for (int i = Constants.ATR_START_ROW; i <= cnt; i++) {
             XSSFRow row = sheet.getRow(i);
             String characterName = XssfUtils.getStringValueSafe(row.getCell(Constants.Columns.CHARACTER_NAME));
+            if (characterName == null || "".equals(characterName)){
+                characterName = XssfUtils.getStringValueSafe(row.getCell(Constants.Columns.PARENT_ID + 3));
+            }
+
             String tmpCharacter = XssfUtils.getStringValueSafe(row.getCell(Constants.Columns.CHARACTER_NAME - 1));
             String place = XssfUtils.getStringValueSafe(row.getCell(Constants.Columns.PLACE));
             String type = XssfUtils.getStringValueSafe(row.getCell(Constants.Columns.TYPE));

@@ -15,6 +15,10 @@ public interface DataRepository {
 
     Place[] getPlaces();
 
+    Place[] getPlaces(int limit);
+
+    Place[] getPlaces(int limit, boolean setFilter);
+
     double[] getBase();
 
     double[] getLeagueAndZal(double[] base);

@@ -4,6 +4,7 @@ import com.gri.model.Attribute;
 import com.gri.model.Bonus;
 import com.gri.model.Character;
 import com.gri.model.Place;
+import com.gri.model.RankMask;
 import com.gri.model.Regime;
 import com.gri.model.Result;
 import com.gri.repository.DataRepository;
@@ -11,25 +12,15 @@ import com.gri.repository.SaveDataRepository;
 import com.gri.repository.impl.DataXssfRepositoryImpl;
 import com.gri.repository.impl.SaveDataXssfRepositoryImpl;
 import com.gri.service.BonusService;
-import com.gri.service.CalculationService;
-import com.gri.service.FilterService;
 import com.gri.service.impl.BonusServiceImpl;
-import com.gri.service.impl.CalculationServiceImpl;
-import com.gri.service.impl.FilterServiceImpl;
 import com.gri.service.impl.FilterTargetServiceImpl;
 import com.gri.utils.Constants;
 import com.gri.utils.Utils;
-import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -37,20 +28,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     private static final int calcAtrLimitCount = 0;
-    private static final int saveFileIntrval = 1_800_000;
+    private static final int saveFileIntrval = 15*60*1000;
     private static final int logIntrval = 30_000;
     private static final int calcDelta = 0;
     private static final double calcDeltaMultiplier = 1;
     private static final String EMPTY_CHARACTER_FIELDS_VALUE = "<<NONE>>";
 
-    private static final String defPath = "C:\\Users\\grse1118\\Desktop\\Raid210117";
+    private static final String defPath = "C:\\Users\\grse1118\\Desktop\\Raid210907";
     private static final String defType = ".xlsx";
     private static final Regime defRegime = Regime.FIND_MULTI_THREAD;
     private static final Double defAttributeFilterValue = null;
@@ -129,7 +119,7 @@ public class Main {
                         places);
 
                 Attribute[][] attribFiltered = filterService.getAttributes();
-                ExecutorService threadPool = Executors.newFixedThreadPool(8);
+                ExecutorService threadPool = Executors.newFixedThreadPool(1);
                 logger.info("SumTargetPriority = {}", filterService.getSumTargetPriority());
                 boolean notStoped = true;
                 int progressIndex = 1;
@@ -191,7 +181,111 @@ public class Main {
                 break;
             }
             case GET_RAITING:{
+                Character character = new Character(EMPTY_CHARACTER_FIELDS_VALUE,
+                                EMPTY_CHARACTER_FIELDS_VALUE,
+                                EMPTY_CHARACTER_FIELDS_VALUE,
+                                0,
+                                Double.MAX_VALUE,
+                                Double.MAX_VALUE);
 
+                Place[] places = dataRepository.getPlaces(6, false); //false
+//                double[] base = dataRepository.getBase();
+                //                          К.Ш	К.УР ЗДР    АТК   ЗЩТ СОПР СКР МЕТК
+                double[] base = new double[]{0, 0, 23000, 1500, 1500, 0, 100, 0};
+                double[] glyphs = dataRepository.getGlyphs();
+                Map<String, Bonus> bonuses = dataRepository.getBonuses(base);
+
+//                Map<Double, double[]> possibleBonusesForSkips = Utils.getPossibleBonusesForSkips(bonuses);
+//                BonusService bonusService = new BonusServiceImpl(possibleBonusesForSkips);
+
+                List<Attribute> allAttributes = dataRepository.getAllAttributes(base, bonuses, places, glyphs, character);
+                dataRepository.close();
+
+                List<Attribute> allAttributesFilter = allAttributes.stream()
+                        .filter(attribute -> "".equals(attribute.characterName))
+                        .filter(attribute -> attribute.rank < 16)
+                        .collect(Collectors.toList());
+
+                Map<Double, List<Double>> mapRank = allAttributesFilter.stream()
+                        .peek(attribute -> {
+                            for (int i = 0; i < attribute.values.length ; i++) {
+                                double bonusAdd = (attribute.bonus == null)
+                                        ? 0
+                                        : attribute.bonus.values[i] * attribute.bonus.quantum;
+                                attribute.values[i] += bonusAdd;
+                            }
+                        })
+                        .collect(Collectors.toMap(attribute -> attribute.id,
+                                attribute -> new ArrayList<>()));
+
+                List<List<Attribute>> listAttributes = Arrays.stream(places)
+                        .map(place -> allAttributesFilter.stream()
+                                .filter(attribute -> place.name.equals(attribute.placeName))
+                                .collect(Collectors.toList()))
+                        .collect(Collectors.toList());
+
+                Attribute[][] attributes = listAttributes.stream()
+                        .map(list -> list.toArray(new Attribute[0]))
+                        .collect(Collectors.toList()).toArray(new Attribute[0][0]);
+
+                double[][] maxValues = new double[places.length][Constants.VAL_COUNT];
+                for (int i = 0; i < attributes.length; i++) {
+                    for (int j = 0; j < attributes[i].length; j++) {
+                        for (int k = 0; k < Constants.VAL_COUNT; k++) {
+                                maxValues[i][k] = Math.max(maxValues[i][k], attributes[i][j].values[k]);
+                        }
+                    }
+                }
+
+                int rank1 = 50;
+                int rank2 = 25;
+                int rank3 = 10;
+
+                List<RankMask> masks = new ArrayList<>();
+//                               KRIT_S, KRIT_V, ZD, ATK, DEF, SOPR, SKOR, METK;
+                masks.add(new RankMask(1,      1,  0,   1,   0,    0,    1,   0, rank1)); // ск атк
+                masks.add(new RankMask(1,      1,  0,   1,   0,    0,    1,   1, rank1)); // ск атк мет
+
+                masks.add(new RankMask(1,      1,  0,   0,   1,    0,    1,   0, rank1)); // ск def
+                masks.add(new RankMask(1,      1,  0,   0,   1,    0,    1,   1, rank1)); // ск def метк
+                masks.add(new RankMask(1,      1,  0,   0,   1,    1,    1,   0, rank1)); // ск def сопр
+                masks.add(new RankMask(1,      1,  0,   0,   1,    1,    1,   1, rank2)); // ск def метк сопр
+
+                masks.add(new RankMask(0,      0,  1,   0,   0,    0,    1,   0, rank1)); // ск здр
+                masks.add(new RankMask(1,      1,  1,   0,   0,    0,    1,   0, rank2)); // ск здр ку
+                masks.add(new RankMask(1,      1,  1,   0,   0,    0,    1,   1, rank2)); // ск здр ку метк
+                masks.add(new RankMask(0,      0,  1,   0,   0,    0,    1,   1, rank1)); // ск здр метк
+                masks.add(new RankMask(0,      0,  1,   0,   0,    1,    1,   0, rank1)); // ск здр сопр
+
+                masks.add(new RankMask(0,      0,  1,   0,   1,    1,    0,   0, rank2)); // здр def сопр
+
+                masks.add(new RankMask(0,      0,  1,   0,   1,    0,    1,   0, rank1)); // ск def здр
+                masks.add(new RankMask(0,      0,  1,   0,   1,    0,    1,   1, rank1)); // ск def здр метк
+                masks.add(new RankMask(0,      0,  1,   0,   1,    1,    1,   0, rank1)); // ск def здр сопр
+                masks.add(new RankMask(0,      0,  1,   0,   1,    1,    1,   1, rank1)); // ск def здр метк сопр
+
+                masks.add(new RankMask(0,      0,  0,   0,   0,    0,    1,   1, rank1)); // ск метк
+                masks.add(new RankMask(0,      0,  0,   0,   0,    1,    1,   0, rank1)); // ск сопр
+                masks.add(new RankMask(0,      0,  0,   0,   0,    1,    1,   1, rank1)); // ск метк сопр
+
+                masks.add(new RankMask(1,      1,  0,   0,   0,    0,    0,   0, rank3)); // KRIT_S KRIT_V
+                masks.add(new RankMask(1,      1,  0,   0,   0,    0,    1,   0, rank3)); // KRIT_S KRIT_V скорость
+//                masks.add(new RankMask(0,      1,  0,   0,   0,    0,    0,   0, rank3)); // KRIT_V
+//                masks.add(new RankMask(0,      0,  1,   0,   0,    0,    0,   0, rank3)); // здр
+//                masks.add(new RankMask(0,      0,  0,   1,   0,    0,    0,   0, rank3)); // атк
+//                masks.add(new RankMask(0,      0,  0,   0,   1,    0,    0,   0, rank3)); // def
+//                masks.add(new RankMask(0,      0,  0,   0,   0,    1,    0,   0, rank3)); // сопр
+                masks.add(new RankMask(0,      0,  0,   0,   0,    0,    1,   0, rank3)); // скорость
+//                masks.add(new RankMask(0,      0,  0,   0,   0,    0,    0,   1, rank3)); // метк
+
+                for (int j = 0; j < masks.size(); j++) {
+                    getRank(mapRank, listAttributes, attributes, masks.get(j).getMask(), maxValues);
+                }
+
+                String outFileName = defPath + defType;
+                SaveDataRepository saveDataRepository = new SaveDataXssfRepositoryImpl(fileName, outFileName);
+                saveDataRepository.saveAttributeRang(mapRank, masks);
+                saveDataRepository.close();
             }
             case FIND_MAIN: {
 //                Attribute[][] attributes = filterService.convertListToArray(places, allAttributes, character);
@@ -247,6 +341,51 @@ public class Main {
             }
         }
         System.exit(0);
+    }
+
+    public static void getRank(Map<Double, List<Double>> mapRank, List<List<Attribute>> listAttributes, Attribute[][] attributes, double[] mask, double[][] maxValues){
+        for (int i = 0; i < attributes.length; i++) {
+            for (int j = 0; j < attributes[i].length; j++) {
+                double r = 0;
+                for (int k = 0; k < mask.length; k++) {
+                    if (mask[k] > 0 && maxValues[i][k] > 0) {
+                        r +=  attributes[i][j].values[k] / maxValues[i][k] ;
+                    }
+                }
+                attributes[i][j].targetPriority = r;
+            }
+        }
+
+        List<List<Attribute>> sortedListAttributes = listAttributes.stream()
+                .map(list -> list.stream()
+                        .sorted((p1,p2) -> Double.compare(p2.targetPriority, p1.targetPriority))
+                        .collect(Collectors.toList()))
+                .collect(Collectors.toList());
+
+        sortedListAttributes = sortedListAttributes.stream()
+                .peek(list -> {
+                    double targetPriority = 0;
+                    double rank = 0;
+                    for (int i = 0; i < list.size(); i++) {
+                        if (list.get(i).targetPriority == targetPriority){
+                            list.get(i).rank = rank;
+                        }
+                        else {
+                            list.get(i).rank = i + 1;
+                            targetPriority = list.get(i).targetPriority;
+                            rank = list.get(i).rank;
+                        }
+                    }
+                })
+               .collect(Collectors.toList());
+
+        sortedListAttributes = sortedListAttributes.stream()
+                .map(list -> list.stream()
+                        .peek(a -> mapRank.get(a.id).add(a.rank))
+                        .collect(Collectors.toList()))
+                .collect(Collectors.toList());
+
+        int x = 1;
     }
 
     public static void saveData(List<Result> resultList, Character character, String fileName, double[] baseAndLeagueAndZal) throws IOException {

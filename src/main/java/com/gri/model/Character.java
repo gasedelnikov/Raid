@@ -5,15 +5,15 @@ public class Character {
     public String fraction;
     public String element;
     public double attributeGroupFilterValue;
-    public double priorityFilterValue;
+    public double rankFilterValue;
     public double priorityLimitFilterValue;
 
-    public Character(String name, String fraction, String element, double attributeGroupFilterValue, double priorityFilterValue, double priorityLimitFilterValue) {
+    public Character(String name, String fraction, String element, double attributeGroupFilterValue, double rankFilterValue, double priorityLimitFilterValue) {
         this.name = name;
         this.fraction = fraction;
         this.element = element;
         this.attributeGroupFilterValue = attributeGroupFilterValue;
-        this.priorityFilterValue = priorityFilterValue;
+        this.rankFilterValue = rankFilterValue;
         this.priorityLimitFilterValue = priorityLimitFilterValue;
     }
 }

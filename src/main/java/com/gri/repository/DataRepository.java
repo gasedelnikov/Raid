@@ -33,5 +33,7 @@ public interface DataRepository {
 
     List<Attribute> getAllAttributes(double[] base, Map<String, Bonus> bonuses, Place[] places, double[] glyphs, Character character);
 
+    List<Attribute> getAllAttributes(double[] base, Map<String, Bonus> bonuses, Place[] places, double[] glyphs, Character character, boolean withoutFlatValues) ;
+
     void close() throws IOException;
 }

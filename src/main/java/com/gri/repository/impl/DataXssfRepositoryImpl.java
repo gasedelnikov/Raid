@@ -181,6 +181,11 @@ public class DataXssfRepositoryImpl implements DataRepository {
 
     @Override
     public List<Attribute> getAllAttributes(double[] base, Map<String, Bonus> bonuses, Place[] places, double[] glyphs, Character character) {
+        return getAllAttributes(base, bonuses, places, glyphs, character, false);
+    }
+
+    @Override
+    public List<Attribute> getAllAttributes(double[] base, Map<String, Bonus> bonuses, Place[] places, double[] glyphs, Character character, boolean withoutFlatValues) {
         List<Attribute> result = new ArrayList<>();
         logger.info("get All Attributes");
         XSSFSheet sheet = workbook.getSheet(Constants.Sheets.ART);
@@ -212,7 +217,6 @@ public class DataXssfRepositoryImpl implements DataRepository {
 
             boolean filter = false;
             Place pl = placeMap.get(place);
-
 
             if (pl != null) {
                 if (!character.name.equals(characterName)) {
@@ -248,9 +252,24 @@ public class DataXssfRepositoryImpl implements DataRepository {
                     logger.warn("IllegalStateException: getAllAttributes");
                 }
 
-                values[Constants.Indexes.ZD] = values[Constants.Indexes.ZD] + base[Constants.Indexes.ZD] * valuesPr[0] / 100;
-                values[Constants.Indexes.ATK] = values[Constants.Indexes.ATK] + base[Constants.Indexes.ATK] * valuesPr[1] / 100;
-                values[Constants.Indexes.DEF] = values[Constants.Indexes.DEF] + base[Constants.Indexes.DEF] * valuesPr[2] / 100;
+                if (withoutFlatValues) {
+//                    if (mainPrIndex != -1){
+//                        valuesPr[mainPrIndex] = 0.0;
+//                    }
+
+                    values[Constants.Indexes.ZD] = base[Constants.Indexes.ZD] * valuesPr[0] / 100;
+                    values[Constants.Indexes.ATK] = base[Constants.Indexes.ATK] * valuesPr[1] / 100;
+                    values[Constants.Indexes.DEF] =  base[Constants.Indexes.DEF] * valuesPr[2] / 100;
+
+//                    if (mainIndex != -1){
+//                        values[mainIndex] = 0.0;
+//                    }
+                 }
+                else{
+                    values[Constants.Indexes.ZD] = values[Constants.Indexes.ZD] + base[Constants.Indexes.ZD] * valuesPr[0] / 100;
+                    values[Constants.Indexes.ATK] = values[Constants.Indexes.ATK] + base[Constants.Indexes.ATK] * valuesPr[1] / 100;
+                    values[Constants.Indexes.DEF] = values[Constants.Indexes.DEF] + base[Constants.Indexes.DEF] * valuesPr[2] / 100;
+                }
 
                 Bonus bonus = bonuses.get(type);
                 if (bonus == null && !pl.checkFraction) {
@@ -259,6 +278,13 @@ public class DataXssfRepositoryImpl implements DataRepository {
                 Attribute attr = new Attribute(id, characterName, place, rarity, glyphsIndex, rank, type, bonus, filterFlag, values);
                 attr.tmpCharacterName = tmpCharacter;
                 attr.place = pl;
+
+                if (mainPrIndex >= 0){
+                    attr.mainIndex = mainPrIndex + 2;
+                }
+                else{
+                    attr.mainIndex = mainIndex;
+                }
                 result.add(attr);
             }
         }

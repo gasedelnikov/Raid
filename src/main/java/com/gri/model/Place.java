@@ -16,4 +16,8 @@ public class Place {
         this.filterPr = filterPr;
         this.filterMain = filterMain;
     }
+
+    public int getId() {
+        return id;
+    }
 }

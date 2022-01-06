@@ -94,7 +94,8 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
     }
 
     @Override
-    public void saveAttributeRang(Map<Double, List<Double>> mapRank, List<RankMask> masks) throws IOException {
+    public void saveAttributeRang(Map<Double, Double[]> mapRank, List<RankMask> masks) throws IOException {
+        final int startColumn = Constants.Columns.PARENT_ID + 5;
         XSSFSheet sheet = workbook.getSheet(Constants.Sheets.ART);
         int cnt = sheet.getLastRowNum();
 
@@ -103,41 +104,70 @@ public class SaveDataXssfRepositoryImpl implements SaveDataRepository {
         XSSFCellStyle styleDef = workbook.createCellStyle();
 
         for (int i = 0; i < masks.size(); i++) {
-            XSSFCell xlsCellParent = getPreparedCell(sheet, Constants.ATR_START_ROW -1, Constants.Columns.PARENT_ID + 5 + i);
+            XSSFCell xlsCellParent = getPreparedCell(sheet, Constants.ATR_START_ROW -1, startColumn + 1 + i);
             xlsCellParent.setCellValue(i);
 
-            xlsCellParent = getPreparedCell(sheet, Constants.ATR_START_ROW -2, Constants.Columns.PARENT_ID + 5 + i);
+            xlsCellParent = getPreparedCell(sheet, Constants.ATR_START_ROW -2, startColumn + 1 + i);
             xlsCellParent.setCellValue(masks.get(i).getName());
         }
 
         for (int i = Constants.ATR_START_ROW; i <= cnt; i++) {
             XSSFCell xlsCellId = getPreparedCell(sheet, i, Constants.Columns.ID);
+            XSSFRow xlsRow = sheet.getRow(i);
+
+            for (int j = 0; j < masks.size(); j++) {
+                XSSFCell xlsCellParent = getPreparedCell(sheet, i, startColumn + j);
+                xlsRow.removeCell(xlsCellParent);
+            }
 
             double id = XssfUtils.getDoubleValueSafe(xlsCellId);
-            List<Double> ranks = mapRank.get(id);
+            Double[] ranks = mapRank.get(id);
             if (ranks != null) {
                 double min = Double.MAX_VALUE;
-                for (int j = 0; j < ranks.size(); j++) {
-                    int maxCount = masks.get(j).getCount();
-                    XSSFCell xlsCellParent = getPreparedCell(sheet, i, Constants.Columns.PARENT_ID + 5 + j);
+                for (int j = 0; j < ranks.length; j++) {
+//                    int maxCount = masks.get(j).getCount();
+                    XSSFCell xlsCellParent = getPreparedCell(sheet, i, startColumn + 1 + j);
 
-                    double rank = ranks.get(j) - maxCount - 1;
-                    xlsCellParent.setCellValue(rank);
-                    min = Math.min(min, rank);
+                    if (ranks[j] != null) {
+                        double rank = ranks[j] ; // - maxCount - 1
+                        xlsCellParent.setCellValue(rank);
+                        min = Math.min(min, rank);
+                    }
                 }
-                XSSFCell xlsCellParent = getPreparedCell(sheet, i, Constants.Columns.PARENT_ID + 4);
-                xlsCellParent.setCellValue(min);
+                XSSFCell xlsCellParent = getPreparedCell(sheet, i, startColumn);
+                if (min != Double.MAX_VALUE){
+                    xlsCellParent.setCellValue(min);
+                }
             }
-            else {
-                XSSFRow xlsRow = sheet.getRow(i);
+        }
+        saveFile();
+    }
 
-                XSSFCell xlsCellParent = getPreparedCell(sheet, i, Constants.Columns.PARENT_ID + 4);
-                xlsRow.removeCell(xlsCellParent);
+    @Override
+    public void saveAttributeRangOnlyCount(Map<Double, Double[]> mapRank, List<RankMask> masks) throws IOException {
+        final int startColumn = Constants.Columns.PARENT_ID + 4;
+        XSSFSheet sheet = workbook.getSheet(Constants.Sheets.ART);
+        int cnt = sheet.getLastRowNum();
 
-                for (int j = 0; j < masks.size(); j++) {
-                    xlsCellParent = getPreparedCell(sheet, i, Constants.Columns.PARENT_ID + 5 + j);
-//                    xlsCellParent.setCellValue("");
-                    xlsRow.removeCell(xlsCellParent);
+        for (int i = Constants.ATR_START_ROW; i <= cnt; i++) {
+            XSSFCell xlsCellId = getPreparedCell(sheet, i, Constants.Columns.ID);
+            XSSFRow xlsRow = sheet.getRow(i);
+
+            double id = XssfUtils.getDoubleValueSafe(xlsCellId);
+            Double[] ranks = mapRank.get(id);
+
+            xlsRow.removeCell(getPreparedCell(sheet, i, startColumn));
+
+            if (ranks != null) {
+                double max = Double.MIN_VALUE;
+                for (int j = 0; j < ranks.length; j++) {
+                    if (ranks[j] != null) {
+                        max = Math.max(max, ranks[j]);
+                    }
+                }
+
+                if (max != Double.MAX_VALUE){
+                    getPreparedCell(sheet, i, startColumn).setCellValue(max);
                 }
             }
         }

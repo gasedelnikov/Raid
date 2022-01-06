@@ -1,5 +1,7 @@
 package com.gri.utils;
 
+import java.util.Arrays;
+
 public class Constants {
     public static final int ATR_START_ROW = 8;
     public static final int ATR_VALUES_COUNT = 9;
@@ -25,6 +27,10 @@ public class Constants {
     public static final int BONUSES_COLL_COUNT = 9;
     public static final int BONUSES_VAL_COUNT = 9;
     public static final int BONUSES_COLL_TYPE = 14;
+
+    public static final String GLOVE = "4.Перчатки";
+    public static final String ARMOR = "5.Доспех";
+    public static final String BOOTS = "6.Сапоги";
 
     public static class Character {
         public static final int ROW_INDEX_NAME = 0;

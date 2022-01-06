@@ -15,7 +15,9 @@ public interface SaveDataRepository {
 
     void saveAttributeParentId(List<Attribute> allAttributes) throws IOException;
 
-    void saveAttributeRang(Map<Double, List<Double>> mapRank, List<RankMask> masks) throws IOException;
+    void saveAttributeRang(Map<Double, Double[]> mapRank, List<RankMask> masks) throws IOException;
+
+    void saveAttributeRangOnlyCount(Map<Double, Double[]> mapRank, List<RankMask> masks) throws IOException;
 
     void close() throws IOException;
 }

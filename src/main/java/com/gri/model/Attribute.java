@@ -21,6 +21,7 @@ public class Attribute implements Comparable{
     public double filterFlag;
     public Place place;
     public double parentId;
+    public int mainIndex;
 
     public double targetPriority;
     public double maxValuePriority;
@@ -82,7 +83,20 @@ public class Attribute implements Comparable{
             result = filterValues[i] <= 0 || values[i] >= filterValues[i];
             i++;
         }
-        while (result && i < Constants.ATR_VALUES_COUNT);
+        while (result && i < Constants.ATR_VALUES_COUNT && i < filterValues.length);
+
+        return result;
+    }
+
+    public boolean filterByMask(int[] filterValues) {
+        int i = 0;
+        boolean result;
+
+        do {
+            result = filterValues[i] > 0 && values[i] >= filterValues[i];
+            i++;
+        }
+        while (!result && i < Constants.ATR_VALUES_COUNT && i < filterValues.length);
 
         return result;
     }

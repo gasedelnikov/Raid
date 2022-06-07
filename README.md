@@ -1,2 +1,2 @@
 # Raid
-Find good set in 200^9  combinations
+Find good set in 300^9  combinations
